@@ -409,6 +409,7 @@ canvas{display:block}
     <button class="tab-btn" onclick="switchTab('t','student-list',event)">Student List</button>
     <button class="tab-btn" onclick="switchTab('t','tests',event)">Tests &amp; Marks</button>
     <button class="tab-btn" onclick="switchTab('t','ranking',event)">Ranking</button>
+    <button class="tab-btn" onclick="switchTab('t','student-report',event)">📄 Student Report</button>
     <button class="tab-btn" onclick="switchTab('t','settings',event)">&#9881; Settings</button>
   </div>
 
@@ -485,6 +486,44 @@ canvas{display:block}
       </div>
     </div>
     <div id="ranking-table"></div>
+  </div>
+
+  <!-- TEACHER STUDENT REPORT GENERATION -->
+  <div class="panel" id="t-student-report">
+    <div class="page-title">📄 Generate Student Report Card</div>
+    <div class="grid-2">
+      <!-- Report Generator Card -->
+      <div class="card">
+        <div class="card-title">Naya Report Card Banao</div>
+        <div class="form-group" style="margin-bottom:.65rem">
+          <label>Class</label>
+          <select id="tsr-class" style="width:100%" onchange="teacherUpdateReportStudents(); teacherUpdateReportTests();"><option value="">Chuniye...</option></select>
+        </div>
+        <div class="form-group" style="margin-bottom:.65rem">
+          <label>Student</label>
+          <select id="tsr-student" style="width:100%" onchange="teacherUpdateReportTests()"><option value="">Pehle class chuniye</option></select>
+        </div>
+        <div class="form-group" style="margin-bottom:.8rem">
+          <label>Report Title (optional)</label>
+          <input type="text" id="tsr-title" placeholder="Mid-Term Report - July 2025" style="width:100%">
+        </div>
+        <div style="margin-bottom:.9rem">
+          <label style="margin-bottom:.4rem;font-size:.82rem;color:var(--text)">Tests chuniye:</label>
+          <div id="tsr-tests-list" class="checkbox-group" style="margin-top:.4rem">
+            <span style="color:var(--muted);font-size:.83rem">Class &amp; Student chuniye...</span>
+          </div>
+        </div>
+        <button class="btn btn-purple" id="tsr-gen-btn" onclick="teacherGenerateStudentReport()">📄 Report Banao &amp; Save Karo</button>
+      </div>
+
+      <!-- Generated Reports List (View Only) -->
+      <div class="card">
+        <div class="card-title">Saved Student Reports (View Only)</div>
+        <div id="tsr-saved-list" style="max-height:450px; overflow-y:auto;">
+          <span style="color:var(--muted)">Load ho raha hai...</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="panel" id="t-settings">
@@ -570,28 +609,11 @@ canvas{display:block}
       </div>
     </div>
 
-    <div class="card" style="max-width:680px;margin-bottom:1rem" id="src-generator-card">
-      <div class="card-title">Report Generate Karo</div>
-      <p style="font-size:.83rem;color:var(--muted);margin-bottom:.9rem">Jo tests include karne hain wo chuniye, phir report generate karo aur parents ke saath share karo.</p>
-      <div class="form-group" style="margin-bottom:.8rem">
-        <label>Report Title (optional)</label>
-        <input type="text" id="src-title" placeholder="Mid-Term Report - July 2025" style="width:100%">
-      </div>
-      <div style="margin-bottom:.9rem">
-        <label style="margin-bottom:.4rem;font-size:.82rem;color:var(--text)">Tests chuniye:</label>
-        <div id="src-tests-list" style="margin-top:.4rem">
-          <span style="color:var(--muted);font-size:.83rem">Login ke baad yahan tests aayenge...</span>
-        </div>
-      </div>
-      <button class="btn btn-purple" id="src-gen-btn" onclick="generateStudentReport()">&#128196; Report Generate Karo</button>
-    </div>
-    <div id="src-output" style="display:none;max-width:680px">
-      <div id="src-report-content" style="background:#fff;color:#111;border-radius:14px;overflow:hidden;box-shadow:0 4px 30px rgba(0,0,0,.4)"></div>
-      <div style="display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap">
-        <button class="btn btn-green" onclick="srcShareWhatsApp()">&#128232; WhatsApp pe Share</button>
-        <button class="btn btn-blue" onclick="srcShareEmail()">&#128140; Email pe Bhejo</button>
-        <button class="btn btn-amber" onclick="srcPrint()">&#128424; Print / PDF Save</button>
-      </div>
+    <!-- Fallback if no report card saved -->
+    <div id="no-saved-reports-msg" class="card" style="max-width:680px; display:none;">
+      <p style="color:var(--muted);font-size:.9rem;text-align:center;padding:1rem 0;">
+        Abhi tak koi report card upload nahi hua hai. Apne class teacher se sampark karein.
+      </p>
     </div>
   </div>
 </div>
@@ -827,12 +849,13 @@ window.switchTab = (prefix,tab,ev)=>{
   if(prefix==='t'){
     if(tab==='student-list') renderStudentList();
     if(tab==='ranking')      renderRanking();
+    if(tab==='student-report') { teacherLoadReportOptions(); teacherRenderSavedReports(); }
   }
   if(prefix==='s'){
     if(tab==='my-marks')   renderStudentMarks();
     if(tab==='my-rank')    renderStudentRank();
     if(tab==='progress')   renderProgressChart();
-    if(tab==='report-card'){ loadReportCardTests(); loadSavedStudentReports(); }
+    if(tab==='report-card'){ loadSavedStudentReports(); }
   }
 };
 
@@ -1358,7 +1381,6 @@ async function loadStudentPanel(){
   document.getElementById('sr-subject').innerHTML='<option value="">Chuniye...</option>'+subs.map(s=>`<option>${s}</option>`).join('');
   document.getElementById('sp-subject').innerHTML='<option value="">Chuniye...</option>'+subs.map(s=>`<option>${s}</option>`).join('');
   
-  loadReportCardTests();
   loadSavedStudentReports();
   loading(false);
 }
@@ -1654,13 +1676,16 @@ window.loadSavedStudentReports = async () => {
                             .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   const select = document.getElementById('saved-reports-select');
   const section = document.getElementById('saved-reports-section');
+  const notice = document.getElementById('no-saved-reports-msg');
   
   if (myReports.length > 0) {
     section.style.display = 'block';
+    if(notice) notice.style.display = 'none';
     select.innerHTML = myReports.map(r => `<option value="${r.id}">${r.title} (${r.dateString || new Date(r.createdAt).toLocaleDateString()})</option>`).join('');
     showSavedReport(myReports[0].id, myReports);
   } else {
     section.style.display = 'none';
+    if(notice) notice.style.display = 'block';
   }
 };
 
@@ -1837,6 +1862,257 @@ window.adminDeleteReport = async (reportId) => {
     notify('Error: ' + e.message, false);
   }
   loading(false);
+};
+
+// ── Teacher Student Report Generation Helper Functions ──
+window.teacherLoadReportOptions = () => {
+  if(!myTeacher) return;
+  const select = document.getElementById('tsr-class');
+  select.innerHTML = '<option value="">Chuniye...</option>' + myTeacher.classes.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('tsr-student').innerHTML = '<option value="">Pehle class chuniye</option>';
+  document.getElementById('tsr-tests-list').innerHTML = '<span style="color:var(--muted);font-size:.83rem">Class &amp; Student chuniye...</span>';
+};
+
+window.teacherUpdateReportStudents = async () => {
+  const cls = document.getElementById('tsr-class').value;
+  const select = document.getElementById('tsr-student');
+  if(!cls) {
+    select.innerHTML = '<option value="">Pehle class chuniye</option>';
+    return;
+  }
+  
+  loading(true, 'Students load ho rahe hain...');
+  const students = await gS();
+  const myStudents = students.filter(s => s.cls === cls && s.addedBy === myTeacher.id);
+  
+  if(!myStudents.length) {
+    select.innerHTML = '<option value="">Koi student nahi mila</option>';
+  } else {
+    select.innerHTML = '<option value="">Student chuniye...</option>' + myStudents.map(s => `<option value="${s.id}">${s.name} (${s.rollNo})</option>`).join('');
+  }
+  loading(false);
+};
+
+let teacherSelTests = new Set();
+window.teacherUpdateReportTests = async () => {
+  const cls = document.getElementById('tsr-class').value;
+  const studentId = document.getElementById('tsr-student').value;
+  const w = document.getElementById('tsr-tests-list');
+  teacherSelTests = new Set();
+  
+  if(!cls || !studentId) {
+    w.innerHTML = '<span style="color:var(--muted);font-size:.83rem">Class &amp; Student chuniye...</span>';
+    return;
+  }
+  
+  w.innerHTML = '<span style="color:var(--muted);font-size:.83rem">Tests load ho rahe hain...</span>';
+  const allTests = await gT();
+  const tests = allTests.filter(t => t.cls === cls);
+  
+  if(!tests.length) {
+    w.innerHTML = '<span style="color:var(--muted);font-size:.83rem">Koi test nahi mila.</span>';
+    return;
+  }
+  
+  const byS = {};
+  tests.forEach(t => { (byS[t.subject] = byS[t.subject] || []).push(t); });
+  
+  w.innerHTML = Object.entries(byS).map(([sub, ts]) => `
+    <div style="margin-bottom:.65rem;width:100%">
+      <div style="font-size:.76rem;color:var(--accent2);font-weight:600;margin-bottom:.26rem;text-transform:uppercase;letter-spacing:.05em">${sub}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.32rem">
+        ${ts.map(t => `<label class="cb-item" id="t_scb${t.id}">
+          <input type="checkbox" value="${t.id}" onchange="teacherToggleTest(this,'t_scb${t.id}')"> ${t.name} (${t.total}M)
+        </label>`).join('')}
+      </div>
+    </div>
+  `).join('');
+};
+
+window.teacherToggleTest = (cb, wId) => {
+  document.getElementById(wId).classList.toggle('checked', cb.checked);
+  cb.checked ? teacherSelTests.add(cb.value) : teacherSelTests.delete(cb.value);
+};
+
+window.teacherGenerateStudentReport = async () => {
+  const studentId = document.getElementById('tsr-student').value;
+  const title = document.getElementById('tsr-title').value.trim() || 'Progress Report';
+  
+  if(!studentId) { notify('Pehle student chuniye!', false); return; }
+  if(!teacherSelTests.size) { notify('Kam se kam ek test chuniye!', false); return; }
+  
+  const btn = document.getElementById('tsr-gen-btn');
+  btn.disabled = true;
+  loading(true, 'Report ban rahi hai...');
+  
+  try {
+    const [allTests, allMarks, allStudents] = [await gT(), await gM(), await gS()];
+    const selStudent = allStudents.find(s => s.id === studentId);
+    if(!selStudent) { notify('Student nahi mila!', false); loading(false); btn.disabled = false; return; }
+    
+    const selTests = allTests.filter(t => teacherSelTests.has(t.id));
+    const clsStu = allStudents.filter(s => s.cls === selStudent.cls);
+    const byS = {};
+    selTests.forEach(t => { (byS[t.subject] = byS[t.subject] || []).push(t); });
+    
+    let bodyHtml = '';
+    let totalObt = 0, totalMax = 0;
+    
+    Object.entries(byS).forEach(([sub, tests]) => {
+      let stuObt = 0, stuMax = 0;
+      const rows = tests.map(t => {
+        const m = allMarks.find(mk => mk.testId === t.id && mk.studentId === selStudent.id);
+        const obt = m ? m.obtained : null;
+        if(obt !== null) {
+          stuObt += obt;
+          stuMax += t.total;
+          totalObt += obt;
+          totalMax += t.total;
+        }
+        const p = obt !== null ? pct(obt, t.total) : null;
+        return `<tr>
+          <td style="color:#475569">${t.name}</td>
+          <td style="text-align:center;color:#64748b">${t.total}</td>
+          <td style="text-align:center;font-weight:700;color:${obt !== null ? (p >= 60 ? '#15803d' : '#b91c1c') : '#94a3b8'}">${obt !== null ? obt : '—'}</td>
+          <td style="text-align:center;color:#64748b">${p !== null ? p + '%' : '—'}</td>
+          <td style="text-align:center">${p !== null ? `<span class="gbadge ${gcls(p)}" style="background:${gbg(p)};color:${gcol(p)}">${grade(p)}</span>` : '—'}</td>
+        </tr>`;
+      }).join('');
+      
+      const stuP = stuMax > 0 ? pct(stuObt, stuMax) : null;
+      
+      const rankData = clsStu.map(s => {
+        let o = 0, mx = 0;
+        tests.forEach(t => {
+          const m = allMarks.find(mk => mk.testId === t.id && mk.studentId === s.id);
+          if(m) { o += m.obtained; mx += t.total; }
+        });
+        return { id: s.id, p: mx > 0 ? pct(o, mx) : null };
+      }).filter(d => d.p !== null).sort((a, b) => (b.p || 0) - (a.p || 0));
+      
+      const myRank = rankData.findIndex(d => d.id === selStudent.id) + 1;
+      const rankStr = myRank > 0 ? `Rank: ${myRank} / ${rankData.length} in Class` : 'Rank: —';
+      
+      bodyHtml += `<div class="src-subj-card">
+        <div class="src-subj-header">
+          <span class="src-subj-name">&#128218; ${sub}</span>
+          <span class="src-subj-rank">&#127942; ${rankStr}</span>
+        </div>
+        <table class="src-tbl">
+          <thead><tr><th>Test Name</th><th style="text-align:center">Total</th><th style="text-align:center">Obtained</th><th style="text-align:center">Percentage</th><th style="text-align:center">Grade</th></tr></thead>
+          <tbody>
+            ${rows}
+            ${stuMax > 0 ? `<tr class="src-total-row">
+              <td><b>Subject Total</b></td>
+              <td style="text-align:center"><b>${stuMax}</b></td>
+              <td style="text-align:center"><b>${stuObt}</b></td>
+              <td style="text-align:center"><b>${stuP}%</b></td>
+              <td style="text-align:center"><span class="gbadge ${gcls(stuP)}" style="background:${gbg(stuP)};color:${gcol(stuP)}">${grade(stuP)}</span></td>
+            </tr>` : ''}
+          </tbody>
+        </table>
+      </div>`;
+    });
+    
+    const overallP = totalMax > 0 ? pct(totalObt, totalMax) : 0;
+    const now = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+    
+    const reportHtml = `<div class="src-wrap">
+      <div class="src-header">
+        <div class="src-school">&#127891; Newton's Academy</div>
+        <div class="src-school-sub">Excellence in Education</div>
+        <div class="src-rpt-label">Student Progress Report</div>
+        <div class="src-rpt-title">${title}</div>
+      </div>
+      
+      <div class="src-student-info">
+        <div class="src-info-block"><div class="il">Student Name</div><div class="iv">${selStudent.name}</div></div>
+        <div class="src-info-block"><div class="il">Roll Number</div><div class="iv">${selStudent.rollNo}</div></div>
+        <div class="src-info-block"><div class="il">Class</div><div class="iv">Class ${selStudent.cls}${selStudent.section}</div></div>
+        <div class="src-info-block"><div class="il">Report Date</div><div class="iv">${now}</div></div>
+      </div>
+      
+      ${totalMax > 0 ? `<div class="src-summary">
+        <div class="src-sum-item">
+          <div class="sl">Overall Score</div>
+          <div class="sv" style="color:${gcol(overallP)}">${totalObt}/${totalMax}</div>
+        </div>
+        <div class="src-sum-item">
+          <div class="sl">Overall Percentage</div>
+          <div class="sv" style="color:${gcol(overallP)}">${overallP}%</div>
+        </div>
+        <div class="src-sum-item">
+          <div class="sl">Overall Grade</div>
+          <div class="sv">
+            <span class="gbadge ${gcls(overallP)}" style="font-size:1.1rem;padding:.22rem .85rem;background:${gbg(overallP)};color:${gcol(overallP)}">${grade(overallP)}</span>
+          </div>
+        </div>
+        <div class="src-sum-item">
+          <div class="sl">Tests Included</div>
+          <div class="sv" style="color:#334155">${selTests.length}</div>
+        </div>
+      </div>` : ''}
+      
+      <div class="src-body">${bodyHtml}</div>
+      
+      <div class="src-footer">
+        <p style="font-weight:700;color:#1e293b;font-size:.85rem;margin-bottom:.3rem">Newton's Academy — Student Progress Report</p>
+        <p>Generated on ${now} &nbsp;|&nbsp; This is an auto-generated report from Newton's Academy Management System.</p>
+        <p style="margin-top:.32rem;color:#cbd5e1">For any queries, please contact your class teacher or the academy.</p>
+      </div>
+    </div>`;
+    
+    const reportId = 'student_report_' + selStudent.id + '_' + Date.now();
+    await fbSet('reports', reportId, {
+      id: reportId,
+      type: 'student',
+      studentId: selStudent.id,
+      studentName: selStudent.name,
+      rollNo: selStudent.rollNo,
+      title: title,
+      contentHtml: reportHtml,
+      createdAt: new Date().toISOString(),
+      dateString: now,
+      generatedBy: myTeacher.id
+    });
+    
+    C.reports = null;
+    notify('Report ready aur save ho gayi hai ✓');
+    
+    document.getElementById('tsr-title').value = '';
+    teacherLoadReportOptions();
+    teacherRenderSavedReports();
+  } catch(e) {
+    notify('Error: ' + e.message, false);
+    console.error(e);
+  }
+  loading(false);
+  btn.disabled = false;
+};
+
+window.teacherRenderSavedReports = async () => {
+  if(!myTeacher) return;
+  const w = document.getElementById('tsr-saved-list');
+  w.innerHTML = '<span style="color:var(--muted)">Load ho raha hai...</span>';
+  
+  const reports = await fbAll('reports');
+  const myReports = reports.filter(r => r.type === 'student' && r.generatedBy === myTeacher.id)
+                            .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                            
+  if(!myReports.length) {
+    w.innerHTML = '<span style="color:var(--muted)">Koi saved report nahi hai abhi.</span>';
+    return;
+  }
+  
+  w.innerHTML = myReports.map(r => `
+    <div class="student-row" style="margin-bottom:.5rem;">
+      <div>
+        <div class="s-name">${r.title}</div>
+        <div class="s-meta">${r.studentName} (${r.rollNo}) | Date: ${r.dateString || ''}</div>
+      </div>
+      <button class="btn btn-blue" style="padding:.28rem .55rem;font-size:.73rem" onclick="adminViewReport('${r.id}')">View</button>
+    </div>
+  `).join('');
 };
 
 // ── Event Listeners ──
