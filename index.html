@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newton's Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--card:#1a2235;--border:#2a3550;
+  --accent:#f59e0b;--accent2:#3b82f6;--accent3:#10b981;--danger:#ef4444;--purple:#8b5cf6;
+  --text:#f1f5f9;--muted:#94a3b8;--font:'Baloo 2',sans-serif;--body:'Noto Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+#login-screen{align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 20% 50%,#1e1a3a 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,#0f2744 0%,transparent 60%),var(--bg)}
+.logo-wrap{text-align:center;margin-bottom:2rem}
+.academy-name{font-family:var(--font);font-size:2.6rem;font-weight:800;
+  background:linear-gradient(135deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.academy-sub{font-size:.82rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:.3rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:2rem;width:min(400px,92vw);box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.role-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.2rem}
+.role-btn{padding:1rem .4rem;border:2px solid var(--border);background:var(--card);border-radius:12px;
+  cursor:pointer;transition:all .25s;text-align:center;color:var(--text)}
+.role-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
+.role-btn.selected{border-color:var(--accent);background:rgba(245,158,11,.1)}
+.role-btn .ri{font-size:1.5rem;display:block;margin-bottom:.3rem}
+.role-btn .rl{font-family:var(--font);font-size:.82rem;font-weight:600}
+.inp-group{margin-bottom:.85rem}
+.inp-group label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:.32rem;text-transform:uppercase;letter-spacing:.05em}
+.inp-group input{width:100%;padding:.72rem 1rem;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:.95rem;outline:none;transition:border .2s}
+.inp-group input:focus{border-color:var(--accent)}
+.btn-primary{width:100%;padding:.82rem;background:linear-gradient(135deg,#f59e0b,#d97706);
+  border:none;border-radius:12px;color:#000;font-family:var(--font);font-size:1rem;font-weight:700;cursor:pointer;transition:all .25s}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 25px rgba(245,158,11,.3)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.err-msg{color:var(--danger);font-size:.8rem;margin-top:.4rem;text-align:center;min-height:1rem}
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.72rem 1.2rem;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;flex-shrink:0}
+.brand{font-family:var(--font);font-weight:800;font-size:1.2rem;color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:.8rem}
+.userinfo{font-size:.78rem;color:var(--muted)}
+.logout-btn{padding:.38rem .85rem;background:transparent;border:1px solid var(--border);
+  border-radius:8px;color:var(--muted);cursor:pointer;font-size:.8rem;transition:all .2s}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger)}
+/* TABS */
+.tab-nav{display:flex;gap:3px;background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.4rem .8rem 0;overflow-x:auto;flex-shrink:0}
+.tab-btn{padding:.52rem 1rem;border:none;background:transparent;color:var(--muted);
+  font-family:var(--font);font-size:.86rem;font-weight:500;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--text);background:var(--card)}
+.tab-btn.active{color:var(--accent);background:var(--card);border-bottom:2px solid var(--accent)}
+/* PANELS */
+.panel{display:none;padding:1.2rem;max-width:1100px;margin:0 auto;width:100%}
+.panel.active{display:block}
+.page-title{font-family:var(--font);font-size:1.45rem;font-weight:700;margin-bottom:1.1rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:1rem}
+.card-title{font-family:var(--font);font-size:1rem;font-weight:600;margin-bottom:.85rem;color:var(--accent2)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr 1fr}}
+@media(max-width:460px){.grid-2,.grid-3{grid-template-columns:1fr}}
+select,input[type=text],input[type=number],input[type=password]{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);padding:.52rem .82rem;font-size:.86rem;outline:none;transition:border .2s}
+select:focus,input:focus{border-color:var(--accent)}
+select option{background:var(--surface)}
+label{font-size:.78rem;color:var(--muted);display:block;margin-bottom:.26rem}
+.btn{padding:.48rem .95rem;border:none;border-radius:8px;cursor:pointer;
+  font-family:var(--font);font-weight:600;font-size:.84rem;transition:all .2s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-amber{background:var(--accent);color:#000}.btn-amber:hover:not(:disabled){background:#d97706}
+.btn-blue{background:var(--accent2);color:#fff}.btn-blue:hover:not(:disabled){background:#2563eb}
+.btn-green{background:var(--accent3);color:#fff}.btn-green:hover:not(:disabled){background:#059669}
+.btn-red{background:var(--danger);color:#fff}.btn-red:hover:not(:disabled){background:#dc2626}
+.btn-purple{background:var(--purple);color:#fff}.btn-purple:hover:not(:disabled){background:#7c3aed}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover:not(:disabled){border-color:var(--accent2);color:var(--text)}
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead{background:var(--bg)}
+th{padding:.62rem .9rem;text-align:left;font-size:.73rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+td{padding:.62rem .9rem;border-top:1px solid var(--border);color:var(--text)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.rank-1 td:first-child{color:gold}.rank-2 td:first-child{color:silver}.rank-3 td:first-child{color:#cd7f32}
+/* PILLS */
+.pill{display:inline-block;padding:.16rem .62rem;border-radius:20px;font-size:.73rem;font-weight:600}
+.pill-amber{background:rgba(245,158,11,.15);color:var(--accent)}
+.pill-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+.pill-green{background:rgba(16,185,129,.15);color:#34d399}
+.pill-red{background:rgba(239,68,68,.15);color:#f87171}
+.pill-purple{background:rgba(139,92,246,.15);color:#a78bfa}
+/* TEST GRID */
+.test-grid{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:.65rem}
+.test-pill{padding:.42rem .85rem;background:var(--bg);border:1px solid var(--border);
+  border-radius:9px;cursor:pointer;transition:all .2s;font-size:.8rem;color:var(--text)}
+.test-pill:hover{border-color:var(--accent2);color:var(--accent2)}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+  align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  padding:1.7rem;width:min(540px,100%);max-height:88vh;overflow-y:auto}
+.modal-title{font-family:var(--font);font-size:1.15rem;font-weight:700;margin-bottom:1rem;
+  display:flex;justify-content:space-between;align-items:center}
+.close-modal{background:transparent;border:none;color:var(--muted);font-size:1.3rem;
+  cursor:pointer;padding:.2rem .4rem;border-radius:5px;line-height:1}
+.close-modal:hover{color:var(--danger)}
+/* STAT CARDS */
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+.stat-num{font-family:var(--font);font-size:1.9rem;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:.73rem;color:var(--muted);margin-top:.18rem}
+/* PROGRESS BAR */
+.pbar-wrap{margin:.42rem 0}
+.pbar-label{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:.22rem}
+.pbar{height:7px;background:var(--bg);border-radius:4px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:4px;transition:width .6s}
+/* FORM */
+.form-row{display:flex;flex-wrap:wrap;gap:.7rem;align-items:flex-end;margin-bottom:.88rem}
+.form-group{flex:1;min-width:128px}
+/* CHIPS */
+.roll-chip{display:inline-flex;align-items:center;background:rgba(59,130,246,.12);
+  border:1px solid rgba(59,130,246,.3);border-radius:7px;padding:.22rem .58rem;font-size:.8rem;color:#60a5fa;font-weight:600}
+/* STUDENT ROW */
+.student-row{display:flex;align-items:center;justify-content:space-between;
+  padding:.72rem .88rem;background:var(--bg);border-radius:9px;margin-bottom:.38rem;border:1px solid var(--border)}
+.student-row:hover{border-color:var(--accent2)}
+.s-name{font-weight:600;font-size:.88rem}
+.s-meta{font-size:.73rem;color:var(--muted);margin-top:.08rem}
+/* TEACHER CARD */
+.teacher-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:.95rem;margin-bottom:.55rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.teacher-card:hover{border-color:var(--purple)}
+/* CHECKBOX ITEMS */
+.checkbox-group{display:flex;flex-wrap:wrap;gap:.42rem;margin:.38rem 0}
+.cb-item{display:flex;align-items:center;gap:.38rem;padding:.36rem .65rem;background:var(--bg);
+  border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.8rem;transition:all .2s;user-select:none}
+.cb-item:hover{border-color:var(--accent)}
+.cb-item.checked{border-color:var(--accent);background:rgba(245,158,11,.08);color:var(--accent)}
+.cb-item input{accent-color:var(--accent);cursor:pointer}
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(10,14,26,.88);z-index:999;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem}
+.loading-overlay.show{display:flex}
+.spinner{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:var(--font);font-size:.92rem;color:var(--muted)}
+/* NOTIF */
+#notif{position:fixed;top:1rem;right:1rem;padding:.72rem 1.1rem;border-radius:9px;
+  font-size:.86rem;z-index:500;transform:translateX(220%);transition:transform .3s;
+  max-width:280px;color:#fff;font-weight:500}
+#notif.show{transform:translateX(0)}
+
+/* ══ REPORT CARD (white, print-friendly) ══ */
+.src-wrap{font-family:'Noto Sans',sans-serif;background:#fff;color:#111}
+.src-header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  color:#fff;padding:1.8rem 2.2rem;text-align:center}
+.src-school{font-family:'Baloo 2',sans-serif;font-size:1.75rem;font-weight:800;
+  color:#f59e0b;letter-spacing:.02em}
+.src-school-sub{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);margin-top:.18rem}
+.src-rpt-label{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);margin-top:1.1rem}
+.src-rpt-title{font-size:1.05rem;font-weight:700;color:#fff;margin-top:.18rem}
+.src-student-info{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:1.1rem 2.2rem;background:#f8fafc;border-bottom:2px solid #e2e8f0;flex-wrap:wrap;gap:.7rem}
+.src-info-block .il{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.12rem}
+.src-info-block .iv{font-size:.92rem;font-weight:700;color:#1e293b}
+.src-summary{display:flex;gap:1.6rem;flex-wrap:wrap;padding:1rem 2.2rem;
+  background:#f0fdf4;border-bottom:1px solid #bbf7d0}
+.src-sum-item .sl{font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;color:#166534;margin-bottom:.15rem}
+.src-sum-item .sv{font-size:1.35rem;font-weight:800;font-family:'Baloo 2',sans-serif}
+.src-body{padding:1.3rem 2.2rem}
+.src-subj-card{margin-bottom:1.3rem;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+.src-subj-header{background:linear-gradient(90deg,#1e3a5f,#2563eb);color:#fff;
+  padding:.65rem 1.1rem;display:flex;align-items:center;justify-content:space-between}
+.src-subj-name{font-family:'Baloo 2',sans-serif;font-size:.98rem;font-weight:700}
+.src-subj-rank{font-size:.76rem;background:rgba(255,255,255,.18);border-radius:20px;padding:.18rem .65rem}
+.src-tbl{width:100%;border-collapse:collapse}
+.src-tbl th{background:#f1f5f9;padding:.5rem .95rem;text-align:left;font-size:.7rem;
+  text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600;border-bottom:1px solid #e2e8f0}
+.src-tbl td{padding:.5rem .95rem;border-bottom:1px solid #f1f5f9;font-size:.83rem;color:#334155}
+.src-tbl tr:last-child td{border-bottom:none}
+.src-total-row td{background:#fefce8;font-weight:700;color:#92400e}
+.src-footer{padding:.75rem 2.2rem 1.3rem;text-align:center;border-top:1px solid #e2e8f0}
+.src-footer p{font-size:.7rem;color:#94a3b8;margin:.12rem 0}
+.gbadge{display:inline-block;padding:.13rem .58rem;border-radius:12px;font-size:.73rem;font-weight:700}
+.gA{background:#dcfce7;color:#166534}.gB{background:#dbeafe;color:#1e40af}
+.gC{background:#fef9c3;color:#92400e}.gD{background:#fee2e2;color:#991b1b}
+
+@media print{
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body > *:not(#print-report-area) {
+    display: none !important;
+  }
+  #print-report-area {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .src-header, .src-subj-header {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+canvas{display:block}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Firebase se connect ho raha hai...</div>
+</div>
+
+<!-- Hidden print area -->
+<div id="print-report-area" style="display:none"></div>
+
+<!-- ════ LOGIN ════ -->
+<div id="login-screen" class="screen" style="min-height:100vh">
+  <div>
+    <div class="logo-wrap">
+      <div style="font-size:2.8rem;margin-bottom:.4rem">&#127891;</div>
+      <div class="academy-name">Newton's Academy</div>
+      <div class="academy-sub">Management Portal</div>
+    </div>
+    <div class="login-card">
+      <p style="text-align:center;color:var(--muted);font-size:.83rem;margin-bottom:1rem">Apna role chuniye</p>
+      <div class="role-btns">
+        <div class="role-btn" id="role-admin" onclick="selectRole('admin')">
+          <span class="ri">&#9989;</span><span class="rl">Admin</span>
+        </div>
+        <div class="role-btn" id="role-teacher" onclick="selectRole('teacher')">
+          <span class="ri">&#128105;&#8205;&#127979;</span><span class="rl">Teacher</span>
+        </div>
+        <div class="role-btn" id="role-student" onclick="selectRole('student')">
+          <span class="ri">&#129489;&#8205;&#127891;</span><span class="rl">Student</span>
+        </div>
+      </div>
+      <div id="login-fields"></div>
+      <div class="err-msg" id="login-err"></div>
+      <button class="btn-primary" id="login-btn" onclick="doLogin()" style="margin-top:.5rem">Login Karo &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ADMIN SCREEN ════ -->
+<div id="admin-screen" class="screen">
+  <div class="topbar">
+    <span class="brand">&#127891; Newton's Academy</span>
+    <div class="topbar-right">
+      <span class="userinfo">&#9989; Admin Panel</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('a','teachers',event)">Teachers</button>
+    <button class="tab-btn" onclick="switchTab('a','students',event)">Students</button>
+    <button class="tab-btn" onclick="switchTab('a','report',event)">&#128196; Class Report</button>
+    <button class="tab-btn" onclick="switchTab('a','manage-data',event)">⚙ Manage Reports &amp; Tests</button>
+  </div>
+
+  <!-- TEACHERS -->
+  <div class="panel active" id="a-teachers">
+    <div class="page-title">Teachers Manage Karo</div>
+    <div class="card" style="max-width:640px">
+      <div class="card-title">Naya Teacher Add Karo</div>
+      <div class="form-row">
+        <div class="form-group"><label>Teacher ka Naam</label>
+          <input type="text" id="t-name" placeholder="Pura naam..." style="width:100%"></div>
+        <div class="form-group"><label>Username (login ke liye)</label>
+          <input type="text" id="t-username" placeholder="jaise: ramesh_sir" style="width:100%"></div>
+      </div>
+      <div style="margin-bottom:.8rem">
+        <label style="margin-bottom:.4rem;font-size:.82rem;color:var(--text)">Subjects Assign Karo</label>
+        <div id="subject-assign-list" class="checkbox-group"></div>
+      </div>
+      <div style="margin-bottom:.9rem">
+        <label style="margin-bottom:.4rem;font-size:.82rem;color:var(--text)">Classes Assign Karo</label>
+        <div class="checkbox-group">
+          <label class="cb-item" id="acb9"><input type="checkbox" value="9" onchange="cbToggle(this,'acb9')"> Class 9</label>
+          <label class="cb-item" id="acb10"><input type="checkbox" value="10" onchange="cbToggle(this,'acb10')"> Class 10</label>
+          <label class="cb-item" id="acb11"><input type="checkbox" value="11" onchange="cbToggle(this,'acb11')"> Class 11</label>
+          <label class="cb-item" id="acb12"><input type="checkbox" value="12" onchange="cbToggle(this,'acb12')"> Class 12</label>
+        </div>
+      </div>
+      <button class="btn btn-amber" id="add-teacher-btn" onclick="addTeacher()">+ Teacher Add Karo</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Sabhi Teachers</div>
+      <div id="teachers-list"><span style="color:var(--muted)">Load ho raha hai...</span></div>
+    </div>
+  </div>
+
+  <!-- ADMIN STUDENTS -->
+  <div class="panel" id="a-students">
+    <div class="page-title">Students</div>
+    <div class="card">
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group"><label>Class</label>
+          <select id="a-list-class" onchange="adminRenderStudents()" style="width:100%">
+            <option value="">Sabhi</option><option>9</option><option>10</option><option>11</option><option>12</option>
+          </select></div>
+        <div class="form-group"><label>Search</label>
+          <input type="text" id="a-list-search" placeholder="Naam ya Roll..." oninput="adminRenderStudents()" style="width:100%"></div>
+      </div>
+    </div>
+    <div id="a-student-list-render"></div>
+  </div>
+
+  <!-- CLASS REPORT -->
+  <div class="panel" id="a-report">
+    <div class="page-title">&#128196; Class Progress Report</div>
+    <div class="card" style="max-width:720px">
+      <div class="card-title">Report Settings</div>
+      <div class="form-row">
+        <div class="form-group"><label>Class</label>
+          <select id="rpt-class" style="width:100%" onchange="loadAdminReportOptions()">
+            <option value="">Chuniye...</option><option>9</option><option>10</option><option>11</option><option>12</option>
+          </select></div>
+        <div class="form-group"><label>Report Title</label>
+          <input type="text" id="rpt-title" placeholder="Monthly Report - July 2025" style="width:100%"></div>
+      </div>
+      <div id="rpt-test-select" style="display:none">
+        <label style="margin-bottom:.4rem;font-size:.82rem;color:var(--text)">Tests chuniye:</label>
+        <div id="rpt-tests-list" class="checkbox-group" style="margin:.4rem 0 1rem"></div>
+        <button class="btn btn-purple" onclick="generateClassReport()">&#128196; Report Generate Karo</button>
+      </div>
+    </div>
+    <div id="class-report-output" style="display:none">
+      <div id="class-report-content" style="background:#fff;color:#111;border-radius:14px;overflow:hidden;box-shadow:0 4px 30px rgba(0,0,0,.4)"></div>
+      <div style="display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="adminShareWhatsApp()">&#128232; WhatsApp</button>
+        <button class="btn btn-blue" onclick="adminShareEmail()">&#128140; Email</button>
+        <button class="btn btn-ghost" onclick="adminPrint()">&#128424; Print</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN MANAGE DATA -->
+  <div class="panel" id="a-manage-data">
+    <div class="page-title">Manage Reports &amp; Tests</div>
+    <div class="grid-2">
+      <!-- Tests Management -->
+      <div class="card">
+        <div class="card-title">Created Tests</div>
+        <div class="form-group" style="margin-bottom:.8rem">
+          <label>Filter by Class</label>
+          <select id="adm-test-class" onchange="adminRenderTests()" style="width:100%">
+            <option value="">Sabhi</option><option>9</option><option>10</option><option>11</option><option>12</option>
+          </select>
+        </div>
+        <div id="adm-tests-list" style="margin-top:1rem; max-height:400px; overflow-y:auto;">
+          <span style="color:var(--muted)">Load ho raha hai...</span>
+        </div>
+      </div>
+      <!-- Reports Management -->
+      <div class="card">
+        <div class="card-title">Saved Reports</div>
+        <div class="form-group" style="margin-bottom:.8rem">
+          <label>Filter by Type</label>
+          <select id="adm-report-type" onchange="adminRenderReports()" style="width:100%">
+            <option value="">Sabhi</option>
+            <option value="class">Class Progress Reports</option>
+            <option value="student">Student Reports</option>
+          </select>
+        </div>
+        <div id="adm-reports-list" style="margin-top:1rem; max-height:400px; overflow-y:auto;">
+          <span style="color:var(--muted)">Load ho raha hai...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TEACHER SCREEN ════ -->
+<div id="teacher-screen" class="screen">
+  <div class="topbar">
+    <span class="brand">&#127891; Newton's Academy</span>
+    <div class="topbar-right">
+      <span class="userinfo" id="t-topbar-info">Teacher</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('t','add-student',event)">+ Student</button>
+    <button class="tab-btn" onclick="switchTab('t','student-list',event)">Student List</button>
+    <button class="tab-btn" onclick="switchTab('t','tests',event)">Tests &amp; Marks</button>
+    <button class="tab-btn" onclick="switchTab('t','ranking',event)">Ranking</button>
+    <button class="tab-btn" onclick="switchTab('t','settings',event)">&#9881; Settings</button>
+  </div>
+
+  <div class="panel active" id="t-add-student" style="max-width:660px">
+    <div class="page-title">Naya Student Jodo</div>
+    <div class="card">
+      <div style="margin-bottom:.8rem;padding:.55rem .85rem;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:.8rem;color:var(--accent)" id="t-access-info"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Student ka Naam</label>
+          <input type="text" id="s-name" placeholder="Pura naam..." style="width:100%"></div>
+        <div class="form-group"><label>Class</label>
+          <select id="s-class" style="width:100%"><option value="">Chuniye...</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Section</label>
+          <select id="s-section" style="width:100%"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+        <div class="form-group" style="flex:2; min-width:200px">
+          <label style="margin-bottom:.4rem">Subjects chuniye</label>
+          <div id="student-subjects-list" class="checkbox-group"></div>
+        </div>
+      </div>
+      <button class="btn btn-amber" id="add-stu-btn" onclick="addStudent()">Student Add Karo</button>
+    </div>
+    <div id="add-result"></div>
+  </div>
+
+  <div class="panel" id="t-student-list">
+    <div class="page-title">Students ki List</div>
+    <div class="card">
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group"><label>Class</label>
+          <select id="list-class" onchange="renderStudentList()" style="width:100%"><option value="">Sabhi</option></select></div>
+        <div class="form-group"><label>Search</label>
+          <input type="text" id="list-search" placeholder="Naam ya Roll..." oninput="renderStudentList()" style="width:100%"></div>
+      </div>
+    </div>
+    <div id="student-list-render"></div>
+  </div>
+
+  <div class="panel" id="t-tests">
+    <div class="page-title">Tests &amp; Marks</div>
+    <div class="grid-2" style="margin-bottom:1rem">
+      <div class="card">
+        <div class="card-title">Naya Test Banao</div>
+        <div class="form-group" style="margin-bottom:.6rem"><label>Class</label>
+          <select id="tc-class" style="width:100%" onchange="updateTSubjects('tc')"><option value="">Chuniye...</option></select></div>
+        <div class="form-group" style="margin-bottom:.6rem"><label>Subject</label>
+          <select id="tc-subject" style="width:100%"><option value="">Pehle class chuniye</option></select></div>
+        <div class="form-group" style="margin-bottom:.6rem"><label>Test ka Naam</label>
+          <input type="text" id="tc-name" placeholder="Unit Test 1" style="width:100%"></div>
+        <div class="form-group" style="margin-bottom:.6rem"><label>Total Marks</label>
+          <input type="number" id="tc-total" value="100" min="1" style="width:100%"></div>
+        <button class="btn btn-amber" onclick="createTest()">+ Test Banao</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Tests Dekhein / Marks Bharein</div>
+        <div class="form-group" style="margin-bottom:.6rem"><label>Class</label>
+          <select id="tv-class" style="width:100%" onchange="updateTSubjects('tv');renderTestButtons()"><option value="">Chuniye...</option></select></div>
+        <div class="form-group" style="margin-bottom:.6rem"><label>Subject</label>
+          <select id="tv-subject" style="width:100%" onchange="renderTestButtons()"><option value="">Pehle class chuniye</option></select></div>
+        <div id="test-buttons" class="test-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="t-ranking">
+    <div class="page-title">Subject-wise Ranking</div>
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group"><label>Class</label>
+          <select id="rk-class" onchange="updateTSubjects('rk');renderRanking()" style="width:100%"><option value="">Chuniye...</option></select></div>
+        <div class="form-group"><label>Subject</label>
+          <select id="rk-subject" onchange="renderRanking()" style="width:100%"><option value="">Class chuniye</option></select></div>
+      </div>
+    </div>
+    <div id="ranking-table"></div>
+  </div>
+
+  <div class="panel" id="t-settings">
+    <div class="page-title">&#9881; Settings</div>
+    <div class="card" style="max-width:400px">
+      <div class="card-title">Apna Password Badlo</div>
+      <div class="form-group" style="margin-bottom:.65rem"><label>Purana Password</label>
+        <input type="password" id="old-pass" placeholder="..." style="width:100%"></div>
+      <div class="form-group" style="margin-bottom:.65rem"><label>Naya Password</label>
+        <input type="password" id="new-pass" placeholder="..." style="width:100%"></div>
+      <div class="form-group" style="margin-bottom:.85rem"><label>Naya Password Confirm</label>
+        <input type="password" id="confirm-pass" placeholder="..." style="width:100%"></div>
+      <button class="btn btn-amber" onclick="changePassword()">Password Update Karo</button>
+      <div class="err-msg" id="pass-err" style="margin-top:.5rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ STUDENT SCREEN ════ -->
+<div id="student-screen" class="screen">
+  <div class="topbar">
+    <span class="brand">&#127891; Newton's Academy</span>
+    <div class="topbar-right">
+      <span class="userinfo" id="s-topbar-name">Student</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('s','dashboard',event)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('s','my-marks',event)">Mere Marks</button>
+    <button class="tab-btn" onclick="switchTab('s','my-rank',event)">Meri Rank</button>
+    <button class="tab-btn" onclick="switchTab('s','progress',event)">Progress</button>
+    <button class="tab-btn" onclick="switchTab('s','report-card',event)">&#128196; Report Card</button>
+  </div>
+
+  <div class="panel active" id="s-dashboard">
+    <div class="page-title">Mera Dashboard</div>
+    <div class="grid-3" id="s-stats" style="margin-bottom:1.1rem"></div>
+    <div class="card"><div class="card-title">Subjects Overview</div><div id="s-subjects-list"></div></div>
+  </div>
+
+  <div class="panel" id="s-my-marks">
+    <div class="page-title">Mere Marks</div>
+    <div class="card">
+      <div class="form-group"><label>Subject</label>
+        <select id="sm-subject" style="width:200px" onchange="renderStudentMarks()"><option value="">Sabhi</option></select></div>
+    </div>
+    <div id="student-marks-render"></div>
+  </div>
+
+  <div class="panel" id="s-my-rank">
+    <div class="page-title">Meri Rank</div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Subject chuniye</label>
+      <select id="sr-subject" style="width:200px" onchange="renderStudentRank()"><option value="">Chuniye...</option></select></div>
+    <div id="student-rank-render"></div>
+  </div>
+
+  <div class="panel" id="s-progress">
+    <div class="page-title">Progress Graph</div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Subject chuniye</label>
+      <select id="sp-subject" style="width:200px" onchange="renderProgressChart()"><option value="">Chuniye...</option></select></div>
+    <div class="card"><canvas id="progress-chart" height="300"></canvas></div>
+  </div>
+
+  <!-- ✅ REPORT CARD PANEL -->
+  <div class="panel" id="s-report-card">
+    <div class="page-title">&#128196; Mera Report Card</div>
+    
+    <!-- Saved Reports Section -->
+    <div id="saved-reports-section" style="margin-bottom:1.5rem; display:none;">
+      <div class="card" style="max-width:680px">
+        <div class="card-title">Saved Reports History</div>
+        <div class="form-group" style="margin-bottom:1rem">
+          <label>Pehle se saved report chuniye</label>
+          <select id="saved-reports-select" onchange="showSavedReport(this.value)" style="width:100%"></select>
+        </div>
+        <div id="saved-report-display" style="background:#fff;color:#111;border-radius:14px;overflow:hidden;box-shadow:0 4px 30px rgba(0,0,0,.4);margin-top:1rem;padding:0"></div>
+        <div style="display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="srcShareWhatsAppSaved()">&#128232; WhatsApp pe Share</button>
+          <button class="btn btn-blue" onclick="srcShareEmailSaved()">&#128140; Email pe Bhejo</button>
+          <button class="btn btn-amber" onclick="srcPrintSaved()">&#128424; Print / PDF Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:680px;margin-bottom:1rem" id="src-generator-card">
+      <div class="card-title">Report Generate Karo</div>
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:.9rem">Jo tests include karne hain wo chuniye, phir report generate karo aur parents ke saath share karo.</p>
+      <div class="form-group" style="margin-bottom:.8rem">
+        <label>Report Title (optional)</label>
+        <input type="text" id="src-title" placeholder="Mid-Term Report - July 2025" style="width:100%">
+      </div>
+      <div style="margin-bottom:.9rem">
+        <label style="margin-bottom:.4rem;font-size:.82rem;color:var(--text)">Tests chuniye:</label>
+        <div id="src-tests-list" style="margin-top:.4rem">
+          <span style="color:var(--muted);font-size:.83rem">Login ke baad yahan tests aayenge...</span>
+        </div>
+      </div>
+      <button class="btn btn-purple" id="src-gen-btn" onclick="generateStudentReport()">&#128196; Report Generate Karo</button>
+    </div>
+    <div id="src-output" style="display:none;max-width:680px">
+      <div id="src-report-content" style="background:#fff;color:#111;border-radius:14px;overflow:hidden;box-shadow:0 4px 30px rgba(0,0,0,.4)"></div>
+      <div style="display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="srcShareWhatsApp()">&#128232; WhatsApp pe Share</button>
+        <button class="btn btn-blue" onclick="srcShareEmail()">&#128140; Email pe Bhejo</button>
+        <button class="btn btn-amber" onclick="srcPrint()">&#128424; Print / PDF Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARKS MODAL -->
+<div class="modal-bg" id="marks-modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-test-name">Marks</span>
+      <button class="close-modal" onclick="closeModal('marks-modal')">&#10005;</button>
+    </div>
+    <div id="modal-marks-content"></div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="delete-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">
+      <span>Delete Karo?</span>
+      <button class="close-modal" onclick="closeModal('delete-modal')">&#10005;</button>
+    </div>
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:.85rem;margin-bottom:.9rem">
+      <div style="font-size:.98rem;font-weight:600;margin-bottom:.28rem" id="del-stu-name"></div>
+      <span class="roll-chip" id="del-stu-roll"></span>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:.28rem" id="del-stu-class"></div>
+    </div>
+    <div style="font-size:.82rem;margin-bottom:.9rem;padding:.58rem;background:var(--bg);border-radius:7px;color:var(--muted)" id="del-stu-marks"></div>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:.9rem">Yeh undo nahi ho sakta. Pakka delete karna hai?</p>
+    <div style="display:flex;gap:.65rem">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('delete-modal')">Cancel</button>
+      <button class="btn btn-red" style="flex:1" id="confirm-del-btn" onclick="confirmDelete()">Haan, Delete Karo</button>
+    </div>
+  </div>
+</div>
+
+<!-- SET PASSWORD MODAL -->
+<div class="modal-bg" id="setpass-modal">
+  <div class="modal" style="max-width:350px">
+    <div class="modal-title"><span>&#128274; Password Set Karo</span></div>
+    <p style="font-size:.83rem;color:var(--muted);margin-bottom:.9rem">Pehli baar login kar rahe ho. Apna password set karo.</p>
+    <div class="form-group" style="margin-bottom:.65rem"><label>Naya Password (min 4 chars)</label>
+      <input type="password" id="sp-new" placeholder="Password daalo..." style="width:100%"></div>
+    <div class="form-group" style="margin-bottom:.85rem"><label>Confirm Password</label>
+      <input type="password" id="sp-confirm" placeholder="Dobara likho..." style="width:100%"></div>
+    <div class="err-msg" id="sp-err" style="margin-bottom:.5rem"></div>
+    <button class="btn btn-amber" style="width:100%" onclick="setFirstPassword()">Password Set Karo</button>
+  </div>
+</div>
+
+<div id="notif"></div>
+
+<!-- ════ FIREBASE + APP LOGIC ════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ── Firebase Init ──
+const fb = initializeApp({
+  apiKey:"AIzaSyBVGA430B9QjTZSwe6R3rZFnEZws4kZhhs",
+  authDomain:"newton-academy-79be5.firebaseapp.com",
+  projectId:"newton-academy-79be5",
+  storageBucket:"newton-academy-79be5.firebasestorage.app",
+  messagingSenderId:"625992715984",
+  appId:"1:625992715984:web:69b87bedae8239db48d8d5"
+});
+const db = getFirestore(fb);
+
+// ── Firestore Helpers ──
+const fbAll  = async c => { const s=await getDocs(collection(db,c)); return s.docs.map(d=>({...d.data(),id:d.id})); };
+const fbSet  = async (c,id,d) => setDoc(doc(db,c,id), d);
+const fbUpd  = async (c,id,d) => updateDoc(doc(db,c,id), d);
+const fbDel  = async (c,id)   => deleteDoc(doc(db,c,id));
+
+// ── Cache ──
+let C = {students:null, tests:null, marks:null, teachers:null, reports:null};
+const gS = async(f=false) => { if(!C.students||f) C.students=await fbAll('students'); return C.students; };
+const gT = async(f=false) => { if(!C.tests||f)    C.tests   =await fbAll('tests');    return C.tests;    };
+const gM = async(f=false) => { if(!C.marks||f)    C.marks   =await fbAll('marks');    return C.marks;    };
+const gTe= async(f=false) => { if(!C.teachers||f) C.teachers=await fbAll('teachers'); return C.teachers; };
+const gR = async(f=false) => { if(!C.reports||f)  C.reports =await fbAll('reports');  return C.reports;  };
+
+// ── Subjects ──
+const ALL_SUBS = ['Mathematics','Science','Physics','Chemistry','Biology','English','Hindi',
+  'Social Science','Accountancy','Business Studies','Economics','History','Political Science','Geography'];
+const SUB_MAP = {
+  '9' :['Mathematics','Science','English','Hindi','Social Science'],
+  '10':['Mathematics','Science','English','Hindi','Social Science'],
+  '11_Science'  :['Physics','Chemistry','Mathematics','English','Biology'],
+  '11_Commerce' :['Accountancy','Business Studies','Economics','English','Mathematics'],
+  '11_Arts'     :['History','Political Science','Geography','English','Hindi'],
+  '12_Science'  :['Physics','Chemistry','Mathematics','English','Biology'],
+  '12_Commerce' :['Accountancy','Business Studies','Economics','English','Mathematics'],
+  '12_Arts'     :['History','Political Science','Geography','English','Hindi'],
+};
+const getSubs = (cls,stream) => {
+  if(cls==='9'||cls==='10') return SUB_MAP[cls]||[];
+  return SUB_MAP[cls+'_'+(stream||'Science')]||[];
+};
+
+// ── Utilities ──
+const pct   = (o,t)=>Math.round((o/t)*100);
+const grade = p=>p>=80?'A':p>=60?'B':p>=40?'C':'D';
+const gbg   = p=>p>=80?'#dcfce7':p>=60?'#dbeafe':p>=40?'#fef9c3':'#fee2e2';
+const gcol  = p=>p>=80?'#166534':p>=60?'#1e40af':p>=40?'#92400e':'#991b1b';
+const gcls  = p=>p>=80?'gA':p>=60?'gB':p>=40?'gC':'gD';
+
+function notify(msg, good=true){
+  const n=document.getElementById('notif');
+  n.textContent=msg; n.style.background=good?'var(--accent3)':'var(--danger)';
+  n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),2900);
+}
+function loading(show, msg='Loading...'){
+  document.getElementById('loading-overlay').classList.toggle('show',show);
+  document.getElementById('loading-text').textContent=msg;
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none'});
+  const sc=document.getElementById(id);
+  sc.classList.add('active');
+  sc.style.display=id==='login-screen'?'flex':'flex';
+}
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+window.cbToggle   = (cb,wId) => document.getElementById(wId).classList.toggle('checked',cb.checked);
+
+// ── State ──
+let role=null, me=null, myTeacher=null;
+
+// ── INIT ──
+window.addEventListener('load', async()=>{
+  loading(true,'Firebase se connect ho raha hai...');
+  try{ await gS(); await gT(); await gM(); await gTe(); buildSubjectList(); }
+  catch(e){ console.error(e); }
+  loading(false);
+  showScreen('login-screen');
+});
+
+function buildSubjectList(){
+  const w=document.getElementById('subject-assign-list'); if(!w) return;
+  w.innerHTML=ALL_SUBS.map(s=>{
+    const id='asub_'+s.replace(/\s/g,'_');
+    return `<label class="cb-item" id="${id}"><input type="checkbox" value="${s}" onchange="cbToggle(this,'${id}')"> ${s}</label>`;
+  }).join('');
+}
+
+// ── LOGIN ──
+window.selectRole = r => {
+  role=r;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('role-'+r).classList.add('selected');
+  document.getElementById('login-err').textContent='';
+  document.getElementById('login-fields').innerHTML =
+    r==='admin'   ? `<div class="inp-group"><label>Admin Code</label><input type="password" id="admin-code" placeholder="Code daalo..."></div>` :
+    r==='teacher' ? `<div class="inp-group"><label>Username</label><input type="text" id="t-login-user" placeholder="username..."></div>
+                     <div class="inp-group"><label>Password</label><input type="password" id="t-login-pass" placeholder="password..."></div>` :
+                    `<div class="inp-group"><label>Roll Number</label><input type="text" id="student-roll" placeholder="CL9A-001"></div>`;
+};
+
+window.doLogin = async()=>{
+  const err=document.getElementById('login-err'), btn=document.getElementById('login-btn');
+  if(!role){err.textContent='Pehle role chuniye!';return}
+  btn.disabled=true; btn.textContent='Check ho raha hai...'; err.textContent='';
+  try{
+    if(role==='admin'){
+      if(document.getElementById('admin-code').value.trim()!=='Vipin@129'){
+        err.textContent='Galat admin code!'; btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;
+      }
+      me={role:'admin'}; showScreen('admin-screen'); renderTeachersList();
+
+    } else if(role==='teacher'){
+      const uname=document.getElementById('t-login-user').value.trim().toLowerCase();
+      const pass =document.getElementById('t-login-pass').value.trim();
+      if(!uname||!pass){err.textContent='Username aur password zaroori hain!'; btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;}
+      const teacher=(await gTe()).find(t=>t.username===uname);
+      if(!teacher){err.textContent='Username nahi mila!'; btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;}
+      if(!teacher.password){
+        myTeacher=teacher; document.getElementById('setpass-modal').classList.add('open');
+        btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;
+      }
+      if(teacher.password!==pass){err.textContent='Galat password!'; btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;}
+      myTeacher=teacher; showScreen('teacher-screen'); setupTeacherPanel();
+
+    } else {
+      const roll=document.getElementById('student-roll').value.trim().toUpperCase();
+      if(!roll){err.textContent='Roll number daalo!'; btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;}
+      const stu=(await gS()).find(s=>s.rollNo===roll);
+      if(!stu){err.textContent='Roll number nahi mila!'; btn.disabled=false; btn.textContent='Login Karo &#8594;'; return;}
+      me=stu; document.getElementById('s-topbar-name').textContent=stu.name+' | '+stu.rollNo;
+      showScreen('student-screen'); await loadStudentPanel();
+    }
+  } catch(e){ err.textContent='Error: '+e.message; console.error(e); }
+  btn.disabled=false; btn.textContent='Login Karo &#8594;';
+};
+
+window.setFirstPassword = async()=>{
+  const np=document.getElementById('sp-new').value.trim();
+  const cp=document.getElementById('sp-confirm').value.trim();
+  const err=document.getElementById('sp-err');
+  if(np.length<4){err.textContent='Kam se kam 4 characters chahiye!';return}
+  if(np!==cp){err.textContent='Passwords match nahi kar rahe!';return}
+  loading(true,'Password set ho raha hai...');
+  try{
+    await fbUpd('teachers',myTeacher.id,{password:np});
+    C.teachers=null; myTeacher.password=np;
+    document.getElementById('setpass-modal').classList.remove('open');
+    showScreen('teacher-screen'); setupTeacherPanel();
+    notify('Password set ho gaya! Welcome '+myTeacher.name);
+  } catch(e){ err.textContent='Error: '+e.message; }
+  loading(false);
+};
+
+window.logout = ()=>{
+  role=null; me=null; myTeacher=null;
+  C={students:null,tests:null,marks:null,teachers:null,reports:null};
+  document.getElementById('login-fields').innerHTML='';
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('login-err').textContent='';
+  showScreen('login-screen');
+};
+
+window.switchTab = (prefix,tab,ev)=>{
+  const scr=prefix==='a'?'admin-screen':prefix==='t'?'teacher-screen':'student-screen';
+  document.querySelectorAll('#'+scr+' .panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#'+scr+' .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(prefix+'-'+tab).classList.add('active');
+  if(ev&&ev.target) ev.target.classList.add('active');
+  if(prefix==='a'){
+    if(tab==='students') adminRenderStudents();
+    if(tab==='report')   loadAdminReportOptions();
+    if(tab==='manage-data') { adminRenderTests(); adminRenderReports(); }
+  }
+  if(prefix==='t'){
+    if(tab==='student-list') renderStudentList();
+    if(tab==='ranking')      renderRanking();
+  }
+  if(prefix==='s'){
+    if(tab==='my-marks')   renderStudentMarks();
+    if(tab==='my-rank')    renderStudentRank();
+    if(tab==='progress')   renderProgressChart();
+    if(tab==='report-card'){ loadReportCardTests(); loadSavedStudentReports(); }
+  }
+};
+
+// ══════════════════════════════════════════════════
+// ADMIN FUNCTIONS
+// ══════════════════════════════════════════════════
+
+window.addTeacher = async()=>{
+  const name    = document.getElementById('t-name').value.trim();
+  const username= document.getElementById('t-username').value.trim().toLowerCase();
+  if(!name||!username){notify('Naam aur username zaroori hai!',false);return}
+  const subjects= [...document.querySelectorAll('#subject-assign-list input:checked')].map(i=>i.value);
+  const classes = [...document.querySelectorAll('#acb9,#acb10,#acb11,#acb12')]
+                   .map(l=>l.querySelector('input')).filter(i=>i.checked).map(i=>i.value);
+  if(!subjects.length){notify('Kam se kam ek subject assign karo!',false);return}
+  if(!classes.length){notify('Kam se kam ek class assign karo!',false);return}
+  const teachers=await gTe();
+  if(teachers.find(t=>t.username===username)){notify('Yeh username already exist karta hai!',false);return}
+  loading(true,'Teacher add ho raha hai...');
+  document.getElementById('add-teacher-btn').disabled=true;
+  try{
+    const id='T'+Date.now();
+    await fbSet('teachers',id,{id,name,username,subjects,classes,password:'',addedAt:new Date().toLocaleDateString('hi-IN')});
+    C.teachers=null;
+    document.getElementById('t-name').value='';
+    document.getElementById('t-username').value='';
+    document.querySelectorAll('#subject-assign-list input').forEach(i=>{
+      i.checked=false; const l=i.closest('label'); if(l)l.classList.remove('checked');
+    });
+    ['acb9','acb10','acb11','acb12'].forEach(id=>{
+      const l=document.getElementById(id); const i=l?.querySelector('input');
+      if(i){i.checked=false;l.classList.remove('checked');}
+    });
+    notify(name+' add ho gaye! Username: @'+username);
+    renderTeachersList();
+  } catch(e){ notify('Error: '+e.message,false); }
+  loading(false); document.getElementById('add-teacher-btn').disabled=false;
+};
+
+async function renderTeachersList(){
+  const w=document.getElementById('teachers-list');
+  w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
+  const teachers=await gTe(true);
+  if(!teachers.length){w.innerHTML='<span style="color:var(--muted)">Koi teacher nahi hai abhi.</span>';return}
+  w.innerHTML=teachers.map(t=>`
+    <div class="teacher-card">
+      <div>
+        <div style="font-weight:600;font-size:.92rem">${t.name}</div>
+        <div style="font-size:.76rem;color:var(--muted);margin:.22rem 0">
+          <span class="roll-chip" style="font-size:.73rem">@${t.username}</span>
+          &nbsp;Classes: ${(t.classes||[]).join(', ')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.28rem;margin-top:.32rem">
+          ${(t.subjects||[]).map(s=>`<span class="pill pill-blue">${s}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.38rem">
+        <span class="pill ${t.password?'pill-green':'pill-amber'}">${t.password?'Active':'Awaiting Login'}</span>
+        <div style="display:flex;gap:.4rem">
+          ${t.password?`<button class="btn btn-ghost" style="padding:.28rem .62rem;font-size:.73rem" onclick="resetTeacherPass('${t.id}')">Reset Pass</button>`:''}
+          <button class="btn btn-red" style="padding:.28rem .62rem;font-size:.73rem" onclick="deleteTeacher('${t.id}')">Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+window.deleteTeacher = async id=>{
+  if(!confirm('Teacher delete ho jayega. Pakka?')) return;
+  loading(true,'Delete ho raha hai...');
+  try{ await fbDel('teachers',id); C.teachers=null; renderTeachersList(); notify('Teacher delete ho gaya'); }
+  catch(e){ notify('Error: '+e.message,false); }
+  loading(false);
+};
+
+window.resetTeacherPass = async id=>{
+  if(!confirm('Password reset hoga. Next login pe naya password set karna hoga.')) return;
+  loading(true,'Reset ho raha hai...');
+  try{ await fbUpd('teachers',id,{password:''}); C.teachers=null; renderTeachersList(); notify('Password reset ho gaya'); }
+  catch(e){ notify('Error: '+e.message,false); }
+  loading(false);
+};
+
+window.adminRenderStudents = async()=>{
+  const cls=(document.getElementById('a-list-class').value||'');
+  const srch=(document.getElementById('a-list-search').value||'').toLowerCase();
+  const w=document.getElementById('a-student-list-render');
+  w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
+  let st=await gS();
+  if(cls) st=st.filter(s=>s.cls===cls);
+  if(srch) st=st.filter(s=>s.name.toLowerCase().includes(srch)||s.rollNo.toLowerCase().includes(srch));
+  if(!st.length){w.innerHTML='<div class="card" style="color:var(--muted)">Koi student nahi mila.</div>';return}
+  const byC={};
+  st.forEach(s=>{const k='Class '+s.cls+s.section;(byC[k]=byC[k]||[]).push(s)});
+  w.innerHTML=Object.entries(byC).map(([k,arr])=>`
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="card-title">${k} <span class="pill pill-blue">${arr.length} students</span></div>
+      ${arr.map(s=>`<div class="student-row">
+        <div><div class="s-name">${s.name}</div>
+          <div class="s-meta">Subjects: ${(s.subjects||[]).join(', ')} | Added: ${s.addedAt||''}</div></div>
+        <div style="display:flex;align-items:center;gap:.55rem">
+          <span class="roll-chip">${s.rollNo}</span>
+          <button class="btn btn-red" style="padding:.28rem .58rem;font-size:.73rem" onclick="deleteStudent('${s.id}')">Del</button>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+};
+
+// ── ADMIN CLASS REPORT ──
+let adminSelTests=new Set();
+
+window.loadAdminReportOptions = async()=>{
+  const cls=document.getElementById('rpt-class').value;
+  const w=document.getElementById('rpt-tests-list');
+  const sec=document.getElementById('rpt-test-select');
+  if(!cls){sec.style.display='none';return}
+  w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
+  sec.style.display='block'; adminSelTests=new Set();
+  const tests=(await gT()).filter(t=>t.cls===cls);
+  if(!tests.length){w.innerHTML='<span style="color:var(--muted)">Koi test nahi hai.</span>';return}
+  const byS={};
+  tests.forEach(t=>{(byS[t.subject]=byS[t.subject]||[]).push(t)});
+  w.innerHTML=Object.entries(byS).map(([sub,ts])=>`
+    <div style="margin-bottom:.65rem;width:100%">
+      <div style="font-size:.76rem;color:var(--accent2);font-weight:600;margin-bottom:.28rem;text-transform:uppercase">${sub}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.32rem">
+        ${ts.map(t=>`<label class="cb-item" id="rcb${t.id}">
+          <input type="checkbox" value="${t.id}" onchange="adminToggleTest(this,'rcb${t.id}')"> ${t.name} (${t.total}M)
+        </label>`).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('class-report-output').style.display='none';
+};
+
+window.adminToggleTest=(cb,wId)=>{
+  document.getElementById(wId).classList.toggle('checked',cb.checked);
+  cb.checked ? adminSelTests.add(cb.value) : adminSelTests.delete(cb.value);
+};
+
+window.generateClassReport = async()=>{
+  if(!adminSelTests.size){notify('Kam se kam ek test chuniye!',false);return}
+  loading(true,'Report ban rahi hai...');
+  const cls=document.getElementById('rpt-class').value;
+  const title=document.getElementById('rpt-title').value.trim()||'Progress Report - Class '+cls;
+  const [students, allTests, allMarks]=[await gS(), await gT(), await gM()];
+  const clsStudents=students.filter(s=>s.cls===cls);
+  const selTests=allTests.filter(t=>adminSelTests.has(t.id));
+  const byS={};
+  selTests.forEach(t=>{(byS[t.subject]=byS[t.subject]||[]).push(t)});
+  let bodyHtml='';
+  Object.entries(byS).forEach(([sub,tests])=>{
+    const rows=clsStudents.map(s=>{
+      let o=0,mx=0; const td=[];
+      tests.forEach(t=>{const m=allMarks.find(mk=>mk.testId===t.id&&mk.studentId===s.id);
+        td.push({obt:m?m.obtained:null,tot:t.total,nm:t.name});
+        if(m){o+=m.obtained;mx+=t.total;}});
+      return {s,o,mx,pct:mx>0?pct(o,mx):null,td};
+    }).filter(d=>d.mx>0).sort((a,b)=>(b.pct||0)-(a.pct||0));
+    if(!rows.length) return;
+    bodyHtml+=`<div class="src-subj-card">
+      <div class="src-subj-header">
+        <span class="src-subj-name">${sub}</span>
+        <span class="src-subj-rank">${tests.length} Tests | ${rows.length} Students</span>
+      </div>
+      <table class="src-tbl">
+        <thead><tr><th>Rank</th><th>Naam</th><th>Roll</th>
+          ${tests.map(t=>`<th style="text-align:center">${t.name}<br><span style="font-weight:400">(${t.total}M)</span></th>`).join('')}
+          <th style="text-align:center">Total</th><th style="text-align:center">%</th><th style="text-align:center">Grade</th>
+        </tr></thead>
+        <tbody>${rows.map((d,i)=>`<tr>
+          <td><b>${i+1}</b></td><td>${d.s.name}</td><td>${d.s.rollNo}</td>
+          ${d.td.map(x=>`<td style="text-align:center;font-weight:600;color:${x.obt!==null?(x.obt/x.tot>=.6?'#15803d':'#b91c1c'):'#94a3b8'}">${x.obt!==null?x.obt:'—'}</td>`).join('')}
+          <td style="text-align:center"><b>${d.o}/${d.mx}</b></td>
+          <td style="text-align:center"><b>${d.pct}%</b></td>
+          <td style="text-align:center"><span class="gbadge ${gcls(d.pct)}" style="background:${gbg(d.pct)};color:${gcol(d.pct)}">${grade(d.pct)}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  });
+  const now=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+  const rContent = `<div class="src-wrap">
+    <div class="src-header">
+      <div class="src-school">&#127891; Newton's Academy</div>
+      <div class="src-school-sub">Excellence in Education</div>
+      <div class="src-rpt-label">Class Progress Report</div>
+      <div class="src-rpt-title">${title}</div>
+    </div>
+    <div class="src-student-info" style="justify-content:flex-start;gap:2rem">
+      <div class="src-info-block"><div class="il">Class</div><div class="iv">Class ${cls}</div></div>
+      <div class="src-info-block"><div class="il">Total Students</div><div class="iv">${clsStudents.length}</div></div>
+      <div class="src-info-block"><div class="il">Tests Included</div><div class="iv">${selTests.length}</div></div>
+      <div class="src-info-block"><div class="il">Generated On</div><div class="iv">${now}</div></div>
+    </div>
+    <div class="src-body">${bodyHtml}</div>
+    <div class="src-footer">
+      <p style="font-weight:600;color:#334155;font-size:.82rem">Newton's Academy — Official Class Report</p>
+      <p>Generated: ${now} &nbsp;|&nbsp; Auto-generated from Newton's Academy Management System</p>
+    </div>
+  </div>`;
+  document.getElementById('class-report-content').innerHTML=rContent;
+  document.getElementById('class-report-output').style.display='block';
+  document.getElementById('class-report-output').scrollIntoView({behavior:'smooth'});
+  
+  // Save to Firestore
+  try {
+    const reportId = 'class_report_' + cls + '_' + Date.now();
+    await fbSet('reports', reportId, {
+      id: reportId,
+      type: 'class',
+      class: cls,
+      title: title,
+      contentHtml: rContent,
+      createdAt: new Date().toISOString(),
+      dateString: now
+    });
+    C.reports = null;
+  } catch (e) {
+    console.error('Error saving report:', e);
+  }
+  
+  loading(false); notify('Class report ready aur save ho gayi hai!');
+};
+
+function adminReportText(){
+  const cls=document.getElementById('rpt-class').value;
+  const title=document.getElementById('rpt-title').value.trim()||'Progress Report';
+  return `*Newton's Academy*\n*${title} — Class ${cls}*\n\nClass ki progress report taiyar hai.\n\nApp: ${window.location.href}`;
+}
+window.adminShareWhatsApp = ()=>window.open('https://wa.me/?text='+encodeURIComponent(adminReportText()),'_blank');
+window.adminShareEmail    = ()=>window.open('mailto:?subject='+encodeURIComponent("Newton's Academy - Class Report")+'&body='+encodeURIComponent(adminReportText()));
+window.adminPrint = ()=>{
+  const c=document.getElementById('class-report-content').innerHTML;
+  const pr=document.getElementById('print-report-area');
+  pr.innerHTML=c; pr.style.display='block'; window.print(); pr.style.display='none'; pr.innerHTML='';
+};
+
+// ══════════════════════════════════════════════════
+// TEACHER FUNCTIONS
+// ══════════════════════════════════════════════════
+
+function setupTeacherPanel(){
+  if(!myTeacher) return;
+  document.getElementById('t-topbar-info').textContent=myTeacher.name+' | '+myTeacher.subjects.join(', ');
+  document.getElementById('t-access-info').textContent='Subjects: '+myTeacher.subjects.join(', ')+' | Classes: '+myTeacher.classes.join(', ');
+  const cOpts='<option value="">Chuniye...</option>'+myTeacher.classes.map(c=>`<option>${c}</option>`).join('');
+  ['s-class','tc-class','tv-class','rk-class'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=cOpts;
+  });
+  const lc=document.getElementById('list-class');
+  if(lc) lc.innerHTML='<option value="">Sabhi</option>'+myTeacher.classes.map(c=>`<option>${c}</option>`).join('');
+  
+  // Render subjects checklist for student registration
+  const w = document.getElementById('student-subjects-list');
+  if (w) {
+    w.innerHTML = ALL_SUBS.map(s => {
+      const id = 's_sub_' + s.replace(/\s/g, '_');
+      return `<label class="cb-item" id="${id}"><input type="checkbox" value="${s}" onchange="cbToggle(this,'${id}')"> ${s}</label>`;
+    }).join('');
+  }
+
+  renderStudentList();
+}
+
+window.updateTSubjects = prefix=>{
+  const cls=document.getElementById(prefix+'-class').value;
+  const sel=document.getElementById(prefix+'-subject');
+  if(!cls){sel.innerHTML='<option value="">Pehle class chuniye</option>';return}
+  const clsSubs=getSubs(cls,'Science');
+  const mySubs=(myTeacher?myTeacher.subjects:[]).filter(s=>clsSubs.includes(s));
+  sel.innerHTML='<option value="">Subject chuniye...</option>'+mySubs.map(s=>`<option>${s}</option>`).join('');
+};
+
+async function genRoll(cls,sec){
+  const all=await gS();
+  const ex=all.filter(s=>s.cls===cls&&s.section===sec);
+  return 'CL'+cls+sec+'-'+String(ex.length+1).padStart(3,'0');
+}
+
+window.addStudent = async()=>{
+  const name=document.getElementById('s-name').value.trim();
+  const cls =document.getElementById('s-class').value;
+  const sec =document.getElementById('s-section').value;
+  const subjects = [...document.querySelectorAll('#student-subjects-list input:checked')].map(i=>i.value);
+  if(!name||!cls){notify('Naam aur class zaroori hai!',false);return}
+  if(!subjects.length){notify('Kam se kam ek subject chuniye!',false);return}
+  if(myTeacher&&!myTeacher.classes.includes(cls)){notify('Aapko is class ka access nahi!',false);return}
+  const btn=document.getElementById('add-stu-btn'); btn.disabled=true;
+  loading(true,'Student add ho raha hai...');
+  try{
+    const roll=await genRoll(cls,sec);
+    const id=Date.now()+'';
+    await fbSet('students',id,{id,name,cls,section:sec,subjects,rollNo:roll,
+      addedAt:new Date().toLocaleDateString('hi-IN'),addedBy:myTeacher?.id||'admin'});
+    C.students=null;
+    document.getElementById('add-result').innerHTML=`
+      <div class="card" style="border-color:var(--accent3);margin-top:.75rem">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div style="font-size:1.9rem">&#9989;</div>
+          <div>
+            <div style="font-family:var(--font);font-size:1.05rem;font-weight:700">${name}</div>
+            <div style="margin:.28rem 0"><span class="roll-chip">Roll: ${roll}</span></div>
+            <div style="font-size:.78rem;color:var(--muted)">Class ${cls}${sec} | Subjects: ${subjects.join(', ')}</div>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('s-name').value='';
+    document.querySelectorAll('#student-subjects-list input').forEach(i=>{
+      i.checked=false; const l=i.closest('label'); if(l)l.classList.remove('checked');
+    });
+    notify(name+' add ho gaye! Roll: '+roll);
+  } catch(e){ notify('Error: '+e.message,false); }
+  loading(false); btn.disabled=false;
+};
+
+window.renderStudentList = async()=>{
+  if(!myTeacher) return;
+  const cls=(document.getElementById('list-class').value||'');
+  const srch=(document.getElementById('list-search').value||'').toLowerCase();
+  const w=document.getElementById('student-list-render');
+  w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
+  let st=await gS();
+  // Filter: only show students added by this teacher
+  st=st.filter(s=>s.addedBy === myTeacher.id);
+  if(cls) st=st.filter(s=>s.cls===cls);
+  if(srch) st=st.filter(s=>s.name.toLowerCase().includes(srch)||s.rollNo.toLowerCase().includes(srch));
+  if(!st.length){w.innerHTML='<div class="card" style="color:var(--muted)">Koi student nahi mila.</div>';return}
+  const byC={};
+  st.forEach(s=>{const k='Class '+s.cls+s.section;(byC[k]=byC[k]||[]).push(s)});
+  w.innerHTML=Object.entries(byC).map(([k,arr])=>`
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="card-title">${k} <span class="pill pill-blue">${arr.length}</span></div>
+      ${arr.map(s=>`<div class="student-row">
+        <div><div class="s-name">${s.name}</div>
+          <div class="s-meta">Subjects: ${(s.subjects||[]).join(', ')} | Added: ${s.addedAt||''}</div></div>
+        <div style="display:flex;align-items:center;gap:.55rem">
+          <span class="roll-chip">${s.rollNo}</span>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+};
+
+let _delId=null;
+window.deleteStudent = async id=>{
+  if (myTeacher) { notify('Student delete karne ka access kewal Admin ke paas hai!', false); return; }
+  const st=await gS(); const s=st.find(x=>x.id===id); if(!s) return;
+  _delId=id;
+  document.getElementById('del-stu-name').textContent=s.name;
+  document.getElementById('del-stu-roll').textContent=s.rollNo;
+  document.getElementById('del-stu-class').textContent='Class '+s.cls+s.section;
+  const mk=await gM(); const mc=mk.filter(m=>m.studentId===id).length;
+  document.getElementById('del-stu-marks').textContent=mc>0?mc+' marks records bhi delete honge.':'Koi marks record nahi hai.';
+  document.getElementById('delete-modal').classList.add('open');
+};
+
+window.confirmDelete = async()=>{
+  if(!_delId) return;
+  const btn=document.getElementById('confirm-del-btn'); btn.disabled=true;
+  loading(true,'Delete ho raha hai...');
+  try{
+    await fbDel('students',_delId);
+    const mk=await gM();
+    for(const m of mk.filter(x=>x.studentId===_delId)) await fbDel('marks',m.id);
+    C.students=null; C.marks=null; _delId=null;
+    closeModal('delete-modal');
+    if(myTeacher) renderStudentList(); else adminRenderStudents();
+    notify('Student delete ho gaya.');
+  } catch(e){ notify('Error: '+e.message,false); }
+  loading(false); btn.disabled=false;
+};
+
+window.createTest = async()=>{
+  const cls=document.getElementById('tc-class').value;
+  const sub=document.getElementById('tc-subject').value;
+  const nm =document.getElementById('tc-name').value.trim();
+  const tot=parseInt(document.getElementById('tc-total').value)||100;
+  if(!cls||!sub||!nm){notify('Sabhi fields bharo!',false);return}
+  if(myTeacher&&!myTeacher.subjects.includes(sub)){notify('Is subject ka access nahi!',false);return}
+  loading(true,'Test ban raha hai...');
+  try{
+    const id=Date.now()+'';
+    await fbSet('tests',id,{id,cls,subject:sub,name:nm,total:tot,
+      createdBy:myTeacher?.id||'admin',createdAt:new Date().toLocaleDateString('hi-IN')});
+    C.tests=null; document.getElementById('tc-name').value='';
+    notify('"'+nm+'" test ban gaya!'); renderTestButtons();
+  } catch(e){ notify('Error: '+e.message,false); }
+  loading(false);
+};
+
+window.renderTestButtons = async()=>{
+  const cls=document.getElementById('tv-class').value;
+  const sub=document.getElementById('tv-subject').value;
+  const w=document.getElementById('test-buttons');
+  if(!cls||!sub){w.innerHTML='<span style="color:var(--muted);font-size:.8rem">Class aur subject chuniye...</span>';return}
+  if(myTeacher&&!myTeacher.subjects.includes(sub)){w.innerHTML='<span style="color:var(--danger);font-size:.8rem">Is subject ka access nahi.</span>';return}
+  w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
+  const tests=(await gT()).filter(t=>t.cls===cls&&t.subject===sub&&(!myTeacher||t.createdBy===myTeacher.id));
+  if(!tests.length){w.innerHTML='<span style="color:var(--muted);font-size:.8rem">Koi test nahi hai abhi.</span>';return}
+  w.innerHTML=tests.map(t=>
+    `<div class="test-pill" onclick="openMarksModal('${t.id}')">${t.name}<br>
+     <span style="font-size:.7rem;color:var(--muted)">${t.total} marks</span></div>`
+  ).join('');
+};
+
+window.openMarksModal = async testId=>{
+  loading(true,'Marks load ho rahe hain...');
+  const test=(await gT()).find(t=>t.id===testId); if(!test){loading(false);return}
+  if(myTeacher&&test.createdBy!==myTeacher.id){notify('Is test ka access nahi!',false);loading(false);return}
+  document.getElementById('modal-test-name').textContent=test.name+' — '+test.subject+' (Class '+test.cls+')';
+  const students=(await gS()).filter(s=>s.cls===test.cls);
+  const marks=await gM();
+  loading(false);
+  document.getElementById('modal-marks-content').innerHTML=
+    `<div style="margin-bottom:.75rem;font-size:.8rem;color:var(--muted)">Total: ${test.total} marks | ${students.length} students</div>`+
+    students.map(s=>{
+      const m=marks.find(mk=>mk.testId===test.id&&mk.studentId===s.id);
+      const p=m?pct(m.obtained,test.total):null;
+      return `<div class="student-row" style="margin-bottom:.38rem;flex-wrap:wrap;gap:.38rem">
+        <div><div class="s-name">${s.name}</div><div class="s-meta">${s.rollNo}</div></div>
+        <div style="display:flex;align-items:center;gap:.38rem">
+          <input type="number" value="${m?m.obtained:''}" placeholder="—" min="0" max="${test.total}" style="width:74px"
+            onchange="saveMarkInline('${test.id}','${s.id}',this.value,'${test.total}')">
+          <span style="font-size:.76rem;color:var(--muted)">/${test.total}</span>
+          ${p!==null?`<span class="pill ${p>=60?'pill-green':'pill-red'}">${p}%</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  document.getElementById('marks-modal').classList.add('open');
+};
+
+window.saveMarkInline = async(testId,stuId,val,total)=>{
+  if(val===''||val===null) return;
+  const v=Math.min(parseInt(val)||0,parseInt(total));
+  loading(true,'Save ho raha hai...');
+  try{
+    await fbSet('marks',testId+'_'+stuId,{id:testId+'_'+stuId,testId,studentId:stuId,obtained:v});
+    C.marks=null; notify('Marks save ho gaye ✓');
+    await openMarksModal(testId);
+  } catch(e){ notify('Error: '+e.message,false); }
+  loading(false);
+};
+
+window.renderRanking = async()=>{
+  if(!myTeacher) return;
+  const cls=document.getElementById('rk-class').value;
+  const sub=document.getElementById('rk-subject').value;
+  const w=document.getElementById('ranking-table');
+  if(!cls||!sub){w.innerHTML='';return}
+  if(!myTeacher.subjects.includes(sub)){w.innerHTML='<div class="card" style="color:var(--danger)">Is subject ka access nahi.</div>';return}
+  w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
+  const students=(await gS()).filter(s=>s.cls===cls);
+  const tests=(await gT()).filter(t=>t.cls===cls&&t.subject===sub&&t.createdBy===myTeacher.id);
+  if(!tests.length){w.innerHTML='<div class="card" style="color:var(--muted)">Is subject mein koi test nahi hai.</div>';return}
+  const marks=await gM();
+  const data=students.map(s=>{
+    let o=0,mx=0;
+    tests.forEach(t=>{const m=marks.find(mk=>mk.testId===t.id&&mk.studentId===s.id);if(m){o+=m.obtained;mx+=t.total}});
+    return {s,o,mx,p:mx>0?pct(o,mx):null};
+  }).filter(d=>d.mx>0).sort((a,b)=>(b.p||0)-(a.p||0));
+  if(!data.length){w.innerHTML='<div class="card" style="color:var(--muted)">Koi marks nahi hain abhi.</div>';return}
+  w.innerHTML=`<div class="tbl-wrap"><table><thead><tr>
+    <th>Rank</th><th>Naam</th><th>Roll</th><th>Marks</th><th>%</th><th>Grade</th>
+  </tr></thead><tbody>`+
+  data.map((d,i)=>`<tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">
+    <td><b>#${i+1}</b></td><td>${d.s.name}</td><td>${d.s.rollNo}</td>
+    <td>${d.o}/${d.mx}</td><td><b>${d.p}%</b></td>
+    <td><span class="pill ${d.p>=80?'pill-green':d.p>=60?'pill-blue':d.p>=40?'pill-amber':'pill-red'}">${grade(d.p)}</span></td>
+  </tr>`).join('')+`</tbody></table></div>`;
+};
+
+window.changePassword = async()=>{
+  const old=document.getElementById('old-pass').value.trim();
+  const np =document.getElementById('new-pass').value.trim();
+  const cp =document.getElementById('confirm-pass').value.trim();
+  const err=document.getElementById('pass-err'); err.textContent='';
+  if(old!==myTeacher.password){err.textContent='Purana password galat hai!';return}
+  if(np.length<4){err.textContent='Naya password 4 characters se chhota nahi ho sakta!';return}
+  if(np!==cp){err.textContent='Passwords match nahi kar rahe!';return}
+  loading(true,'Password update ho raha hai...');
+  try{
+    await fbUpd('teachers',myTeacher.id,{password:np});
+    myTeacher.password=np; C.teachers=null;
+    document.getElementById('old-pass').value='';
+    document.getElementById('new-pass').value='';
+    document.getElementById('confirm-pass').value='';
+    notify('Password update ho gaya!');
+  } catch(e){ err.textContent='Error: '+e.message; }
+  loading(false);
+};
+
+// ══════════════════════════════════════════════════
+// STUDENT FUNCTIONS
+// ══════════════════════════════════════════════════
+
+async function loadStudentPanel(){
+  if(!me) return;
+  loading(true,'Data load ho raha hai...');
+  
+  // Use enrolled subjects instead of SUB_MAP class subjects
+  const subs = me.subjects || [];
+  
+  const tests=(await gT()).filter(t=>t.cls===me.cls);
+  const marks=(await gM()).filter(m=>m.studentId===me.id);
+  const avg=marks.length>0?Math.round(marks.reduce((a,m)=>{
+    const t=tests.find(tt=>tt.id===m.testId);return a+(t?pct(m.obtained,t.total):0);},0)/marks.length):0;
+  
+  document.getElementById('s-stats').innerHTML=
+    `<div class="stat-card"><div class="stat-num" style="font-size:1.3rem">${me.rollNo}</div><div class="stat-lbl">Roll Number</div></div>
+     <div class="stat-card"><div class="stat-num">${tests.length}</div><div class="stat-lbl">Kul Tests</div></div>
+     <div class="stat-card"><div class="stat-num">${avg}%</div><div class="stat-lbl">Average Score</div></div>`;
+  
+  document.getElementById('s-subjects-list').innerHTML=subs.map(sub=>{
+    const st=tests.filter(t=>t.subject===sub);
+    const sm=marks.filter(m=>st.find(t=>t.id===m.testId));
+    const tot=sm.reduce((a,m)=>a+m.obtained,0);
+    const max=sm.reduce((a,m)=>{const t=tests.find(tt=>tt.id===m.testId);return a+(t?t.total:0)},0);
+    const p=max>0?pct(tot,max):null;
+    return `<div class="pbar-wrap">
+      <div class="pbar-label"><span>${sub}</span><span>${p!==null?p+'%':'Data nahi'}</span></div>
+      <div class="pbar"><div class="pbar-fill" style="width:${p||0}%;background:${p>=80?'var(--accent3)':p>=60?'var(--accent2)':p>=40?'var(--accent)':'var(--danger)'}"></div></div>
+    </div>`;
+  }).join('');
+  
+  document.getElementById('sm-subject').innerHTML='<option value="">Sabhi</option>'+subs.map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('sr-subject').innerHTML='<option value="">Chuniye...</option>'+subs.map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('sp-subject').innerHTML='<option value="">Chuniye...</option>'+subs.map(s=>`<option>${s}</option>`).join('');
+  
+  loadReportCardTests();
+  loadSavedStudentReports();
+  loading(false);
+}
+
+window.renderStudentMarks = async()=>{
+  if(!me) return;
+  const sub=document.getElementById('sm-subject').value;
+  const tests=(await gT()).filter(t=>t.cls===me.cls&&(!sub||t.subject===sub));
+  const marks=(await gM()).filter(m=>m.studentId===me.id);
+  const w=document.getElementById('student-marks-render');
+  if(!tests.length){w.innerHTML='<div class="card" style="color:var(--muted)">Koi test nahi mila.</div>';return}
+  w.innerHTML=`<div class="tbl-wrap"><table><thead><tr>
+    <th>Test</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th>
+  </tr></thead><tbody>`+
+  tests.map(t=>{
+    const m=marks.find(mk=>mk.testId===t.id); const p=m?pct(m.obtained,t.total):null;
+    return `<tr><td>${t.name}</td><td>${t.subject}</td>
+      <td>${m?m.obtained+'/'+t.total:'Nahi diya'}</td>
+      <td>${p!==null?p+'%':'—'}</td>
+      <td>${p!==null?`<span class="pill ${p>=80?'pill-green':p>=60?'pill-blue':p>=40?'pill-amber':'pill-red'}">${grade(p)}</span>`:'—'}</td>
+    </tr>`;
+  }).join('')+`</tbody></table></div>`;
+};
+
+window.renderStudentRank = async()=>{
+  if(!me) return;
+  const sub=document.getElementById('sr-subject').value;
+  if(!sub){document.getElementById('student-rank-render').innerHTML='';return}
+  const students=(await gS()).filter(s=>s.cls===me.cls);
+  const tests=(await gT()).filter(t=>t.cls===me.cls&&t.subject===sub);
+  const marks=await gM();
+  const data=students.map(s=>{
+    let o=0,mx=0;
+    tests.forEach(t=>{const m=marks.find(mk=>mk.testId===t.id&&mk.studentId===s.id);if(m){o+=m.obtained;mx+=t.total}});
+    return {s,o,mx,p:mx>0?pct(o,mx):null};
+  }).filter(d=>d.mx>0).sort((a,b)=>(b.p||0)-(a.p||0));
+  const myRank=data.findIndex(d=>d.s.id===me.id)+1;
+  const myD=data.find(d=>d.s.id===me.id);
+  const w=document.getElementById('student-rank-render');
+  if(!myD){w.innerHTML='<div class="card" style="color:var(--muted)">Is subject mein marks nahi hain abhi.</div>';return}
+  w.innerHTML=`<div class="grid-3" style="margin-bottom:1rem">
+    <div class="stat-card"><div class="stat-num">#${myRank}</div><div class="stat-lbl">${sub} Rank</div></div>
+    <div class="stat-card"><div class="stat-num">${myD.p}%</div><div class="stat-lbl">Score</div></div>
+    <div class="stat-card"><div class="stat-num">${data.length}</div><div class="stat-lbl">Students</div></div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Rank</th><th>Naam</th><th>%</th></tr></thead><tbody>`+
+  data.slice(0,10).map((d,i)=>`<tr class="${d.s.id===me.id?'rank-1':i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">
+    <td>#${i+1}</td>
+    <td>${d.s.name}${d.s.id===me.id?' <span class="pill pill-amber">Aap</span>':''}</td>
+    <td><b>${d.p}%</b></td>
+  </tr>`).join('')+`</tbody></table></div>`;
+};
+
+let progressChart=null;
+window.renderProgressChart = async()=>{
+  if(!me) return;
+  const sub=document.getElementById('sp-subject').value; if(!sub) return;
+  const tests=(await gT()).filter(t=>t.cls===me.cls&&t.subject===sub);
+  const marks=(await gM()).filter(m=>m.studentId===me.id);
+  const labels=[],data=[];
+  tests.forEach(t=>{const m=marks.find(mk=>mk.testId===t.id);labels.push(t.name);data.push(m?pct(m.obtained,t.total):null)});
+  const ctx=document.getElementById('progress-chart');
+  if(progressChart) progressChart.destroy();
+  progressChart=new Chart(ctx,{type:'line',
+    data:{labels,datasets:[{label:sub+' (%)',data,
+      borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.12)',
+      tension:.4,fill:true,pointBackgroundColor:'#f59e0b',pointRadius:5,spanGaps:true}]},
+    options:{responsive:true,
+      plugins:{legend:{labels:{color:'#f1f5f9'}},tooltip:{callbacks:{label:c=>'Score: '+c.raw+'%'}}},
+      scales:{
+        y:{min:0,max:100,grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#94a3b8',callback:v=>v+'%'}},
+        x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#94a3b8'}}
+      }
+    }
+  });
+};
+
+// ══════════════════════════════════════════════════
+// STUDENT REPORT CARD
+// ══════════════════════════════════════════════════
+let srcSelTests=new Set();
+
+window.loadReportCardTests = async()=>{
+  if(!me) return;
+  const w=document.getElementById('src-tests-list');
+  w.innerHTML='<span style="color:var(--muted);font-size:.83rem">Tests load ho rahe hain...</span>';
+  const tests=(await gT()).filter(t=>t.cls===me.cls);
+  srcSelTests=new Set();
+  if(!tests.length){w.innerHTML='<span style="color:var(--muted);font-size:.83rem">Koi test nahi hai abhi.</span>';return}
+  const byS={};
+  tests.forEach(t=>{(byS[t.subject]=byS[t.subject]||[]).push(t)});
+  w.innerHTML=Object.entries(byS).map(([sub,ts])=>`
+    <div style="margin-bottom:.65rem;width:100%">
+      <div style="font-size:.76rem;color:var(--accent2);font-weight:600;margin-bottom:.26rem;text-transform:uppercase;letter-spacing:.05em">${sub}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.32rem">
+        ${ts.map(t=>`<label class="cb-item" id="scb${t.id}">
+          <input type="checkbox" value="${t.id}" onchange="srcToggle(this,'scb${t.id}')"> ${t.name} (${t.total}M)
+        </label>`).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('src-output').style.display='none';
+};
+
+window.srcToggle=(cb,wId)=>{
+  document.getElementById(wId).classList.toggle('checked',cb.checked);
+  cb.checked ? srcSelTests.add(cb.value) : srcSelTests.delete(cb.value);
+};
+
+window.generateStudentReport = async()=>{
+  if(!srcSelTests.size){notify('Kam se kam ek test chuniye!',false);return}
+  const btn=document.getElementById('src-gen-btn'); btn.disabled=true;
+  loading(true,'Report ban rahi hai...');
+  try{
+    const title=document.getElementById('src-title').value.trim()||'Progress Report';
+    const [allTests,allMarks,allStudents]=[await gT(),await gM(),await gS()];
+    const selTests=allTests.filter(t=>srcSelTests.has(t.id));
+    const clsStu=allStudents.filter(s=>s.cls===me.cls);
+    const byS={};
+    selTests.forEach(t=>{(byS[t.subject]=byS[t.subject]||[]).push(t)});
+    let bodyHtml=''; let totalObt=0,totalMax=0;
+
+    Object.entries(byS).forEach(([sub,tests])=>{
+      let stuObt=0,stuMax=0;
+      const rows=tests.map(t=>{
+        const m=allMarks.find(mk=>mk.testId===t.id&&mk.studentId===me.id);
+        const obt=m?m.obtained:null;
+        if(obt!==null){stuObt+=obt;stuMax+=t.total;totalObt+=obt;totalMax+=t.total;}
+        const p=obt!==null?pct(obt,t.total):null;
+        return `<tr>
+          <td style="color:#475569">${t.name}</td>
+          <td style="text-align:center;color:#64748b">${t.total}</td>
+          <td style="text-align:center;font-weight:700;color:${obt!==null?(p>=60?'#15803d':'#b91c1c'):'#94a3b8'}">${obt!==null?obt:'—'}</td>
+          <td style="text-align:center;color:#64748b">${p!==null?p+'%':'—'}</td>
+          <td style="text-align:center">${p!==null?`<span class="gbadge ${gcls(p)}" style="background:${gbg(p)};color:${gcol(p)}">${grade(p)}</span>`:'—'}</td>
+        </tr>`;
+      }).join('');
+      const stuP=stuMax>0?pct(stuObt,stuMax):null;
+
+      // Rank in class for this subject
+      const rankData=clsStu.map(s=>{
+        let o=0,mx=0;
+        tests.forEach(t=>{const m=allMarks.find(mk=>mk.testId===t.id&&mk.studentId===s.id);if(m){o+=m.obtained;mx+=t.total;}});
+        return {id:s.id,p:mx>0?pct(o,mx):null};
+      }).filter(d=>d.p!==null).sort((a,b)=>(b.p||0)-(a.p||0));
+      const myRank=rankData.findIndex(d=>d.id===me.id)+1;
+      const rankStr=myRank>0?`Rank: ${myRank} / ${rankData.length} in Class`:'Rank: —';
+
+      bodyHtml+=`<div class="src-subj-card">
+        <div class="src-subj-header">
+          <span class="src-subj-name">&#128218; ${sub}</span>
+          <span class="src-subj-rank">&#127942; ${rankStr}</span>
+        </div>
+        <table class="src-tbl">
+          <thead><tr><th>Test Name</th><th style="text-align:center">Total</th><th style="text-align:center">Obtained</th><th style="text-align:center">Percentage</th><th style="text-align:center">Grade</th></tr></thead>
+          <tbody>
+            ${rows}
+            ${stuMax>0?`<tr class="src-total-row">
+              <td><b>Subject Total</b></td>
+              <td style="text-align:center"><b>${stuMax}</b></td>
+              <td style="text-align:center"><b>${stuObt}</b></td>
+              <td style="text-align:center"><b>${stuP}%</b></td>
+              <td style="text-align:center"><span class="gbadge ${gcls(stuP)}" style="background:${gbg(stuP)};color:${gcol(stuP)}">${grade(stuP)}</span></td>
+            </tr>`:''}
+          </tbody>
+        </table>
+      </div>`;
+    });
+
+    const overallP=totalMax>0?pct(totalObt,totalMax):0;
+    const now=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+
+    const reportHtml=`<div class="src-wrap">
+      <div class="src-header">
+        <div class="src-school">&#127891; Newton's Academy</div>
+        <div class="src-school-sub">Excellence in Education</div>
+        <div class="src-rpt-label">Student Progress Report</div>
+        <div class="src-rpt-title">${title}</div>
+      </div>
+
+      <div class="src-student-info">
+        <div class="src-info-block"><div class="il">Student Name</div><div class="iv">${me.name}</div></div>
+        <div class="src-info-block"><div class="il">Roll Number</div><div class="iv">${me.rollNo}</div></div>
+        <div class="src-info-block"><div class="il">Class</div><div class="iv">Class ${me.cls}${me.section}</div></div>
+        <div class="src-info-block"><div class="il">Report Date</div><div class="iv">${now}</div></div>
+      </div>
+
+      ${totalMax>0?`<div class="src-summary">
+        <div class="src-sum-item">
+          <div class="sl">Overall Score</div>
+          <div class="sv" style="color:${gcol(overallP)}">${totalObt}/${totalMax}</div>
+        </div>
+        <div class="src-sum-item">
+          <div class="sl">Overall Percentage</div>
+          <div class="sv" style="color:${gcol(overallP)}">${overallP}%</div>
+        </div>
+        <div class="src-sum-item">
+          <div class="sl">Overall Grade</div>
+          <div class="sv">
+            <span class="gbadge ${gcls(overallP)}" style="font-size:1.1rem;padding:.22rem .85rem;background:${gbg(overallP)};color:${gcol(overallP)}">${grade(overallP)}</span>
+          </div>
+        </div>
+        <div class="src-sum-item">
+          <div class="sl">Tests Included</div>
+          <div class="sv" style="color:#334155">${selTests.length}</div>
+        </div>
+      </div>`:''}
+
+      <div class="src-body">${bodyHtml}</div>
+
+      <div class="src-footer">
+        <p style="font-weight:700;color:#1e293b;font-size:.85rem;margin-bottom:.3rem">Newton's Academy — Student Progress Report</p>
+        <p>Generated on ${now} &nbsp;|&nbsp; This is an auto-generated report from Newton's Academy Management System.</p>
+        <p style="margin-top:.32rem;color:#cbd5e1">For any queries, please contact your class teacher or the academy.</p>
+      </div>
+    </div>`;
+
+    document.getElementById('src-report-content').innerHTML=reportHtml;
+    document.getElementById('src-output').style.display='block';
+    document.getElementById('src-output').scrollIntoView({behavior:'smooth'});
+    
+    // Save to Firestore
+    try {
+      const reportId = 'student_report_' + me.id + '_' + Date.now();
+      await fbSet('reports', reportId, {
+        id: reportId,
+        type: 'student',
+        studentId: me.id,
+        studentName: me.name,
+        rollNo: me.rollNo,
+        title: title,
+        contentHtml: reportHtml,
+        createdAt: new Date().toISOString(),
+        dateString: now
+      });
+      C.reports = null;
+      loadSavedStudentReports();
+    } catch (e) {
+      console.error('Error saving report:', e);
+    }
+    
+    notify('Report ready aur save ho gayi hai! Parents ke saath share karo.');
+  } catch(e){ notify('Error: '+e.message,false); console.error(e); }
+  loading(false); btn.disabled=false;
+};
+
+function srcText(){
+  const title=document.getElementById('src-title').value.trim()||'Progress Report';
+  return `*Newton's Academy*\n*${title}*\n\nStudent: *${me.name}*\nRoll No: ${me.rollNo} | Class: ${me.cls}${me.section}\n\nProgress report taiyar hai. App pe login karke dekhen:\n${window.location.href}`;
+}
+window.srcShareWhatsApp = ()=>window.open('https://wa.me/?text='+encodeURIComponent(srcText()),'_blank');
+window.srcShareEmail    = ()=>window.open('mailto:?subject='+encodeURIComponent("Newton's Academy - "+me.name+" - Progress Report")+'&body='+encodeURIComponent(srcText()));
+window.srcPrint = ()=>{
+  const c=document.getElementById('src-report-content').innerHTML;
+  const pr=document.getElementById('print-report-area');
+  pr.innerHTML=`<style>
+    body{margin:0;font-family:'Noto Sans',sans-serif}
+    .src-wrap{background:#fff;color:#111}
+    .src-header{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:#fff;padding:1.8rem 2.2rem;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .src-school{font-family:'Baloo 2',sans-serif;font-size:1.75rem;font-weight:800;color:#f59e0b}
+    .src-school-sub{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:.18rem}
+    .src-rpt-label{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:1rem}
+    .src-rpt-title{font-size:1.05rem;font-weight:700;color:#fff;margin-top:.18rem}
+    .src-student-info{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.7rem;padding:1rem 2.2rem;background:#f8fafc;border-bottom:2px solid #e2e8f0}
+    .src-info-block .il{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.1rem}
+    .src-info-block .iv{font-size:.9rem;font-weight:700;color:#1e293b}
+    .src-summary{display:flex;gap:1.5rem;flex-wrap:wrap;padding:.9rem 2.2rem;background:#f0fdf4;border-bottom:1px solid #bbf7d0}
+    .src-sum-item .sl{font-size:.67rem;text-transform:uppercase;color:#166534;margin-bottom:.12rem}
+    .src-sum-item .sv{font-size:1.3rem;font-weight:800;font-family:'Baloo 2',sans-serif}
+    .src-body{padding:1.2rem 2.2rem}
+    .src-subj-card{margin-bottom:1.2rem;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid}
+    .src-subj-header{background:linear-gradient(90deg,#1e3a5f,#2563eb);color:#fff;padding:.62rem 1.1rem;display:flex;align-items:center;justify-content:space-between;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .src-subj-name{font-family:'Baloo 2',sans-serif;font-size:.96rem;font-weight:700}
+    .src-subj-rank{font-size:.74rem;background:rgba(255,255,255,.18);border-radius:20px;padding:.16rem .62rem}
+    .src-tbl{width:100%;border-collapse:collapse}
+    .src-tbl th{background:#f1f5f9;padding:.48rem .9rem;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600;border-bottom:1px solid #e2e8f0}
+    .src-tbl td{padding:.48rem .9rem;border-bottom:1px solid #f1f5f9;font-size:.82rem;color:#334155}
+    .src-tbl tr:last-child td{border-bottom:none}
+    .src-total-row td{background:#fefce8;font-weight:700;color:#92400e}
+    .src-footer{padding:.7rem 2.2rem 1.2rem;text-align:center;border-top:1px solid #e2e8f0}
+    .src-footer p{font-size:.69rem;color:#94a3b8;margin:.1rem 0}
+    .gbadge{display:inline-block;padding:.12rem .55rem;border-radius:12px;font-size:.72rem;font-weight:700}
+  </style>`+c;
+  pr.style.display='block';
+  window.print();
+  setTimeout(()=>{pr.style.display='none';pr.innerHTML=''},1000);
+};
+
+// ── Student Saved Reports Helper Functions ──
+window.loadSavedStudentReports = async () => {
+  if(!me) return;
+  const reports = await fbAll('reports');
+  const myReports = reports.filter(r => r.type === 'student' && r.studentId === me.id)
+                            .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const select = document.getElementById('saved-reports-select');
+  const section = document.getElementById('saved-reports-section');
+  
+  if (myReports.length > 0) {
+    section.style.display = 'block';
+    select.innerHTML = myReports.map(r => `<option value="${r.id}">${r.title} (${r.dateString || new Date(r.createdAt).toLocaleDateString()})</option>`).join('');
+    showSavedReport(myReports[0].id, myReports);
+  } else {
+    section.style.display = 'none';
+  }
+};
+
+let currentActiveSavedReport = null;
+window.showSavedReport = (reportId, preLoadedReports = null) => {
+  const showIt = (reportsList) => {
+    const r = reportsList.find(x => x.id === reportId);
+    if (r) {
+      currentActiveSavedReport = r;
+      document.getElementById('saved-report-display').innerHTML = r.contentHtml;
+    }
+  };
+  
+  if (preLoadedReports) {
+    showIt(preLoadedReports);
+  } else {
+    fbAll('reports').then(showIt);
+  }
+};
+
+window.srcShareWhatsAppSaved = () => {
+  if(!currentActiveSavedReport) return;
+  const text = `*Newton's Academy*\n*${currentActiveSavedReport.title}*\n\nStudent: *${me.name}*\nRoll No: ${me.rollNo}\n\nProgress report taiyar hai. App pe login karke dekhen:\n${window.location.href}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+};
+
+window.srcShareEmailSaved = () => {
+  if(!currentActiveSavedReport) return;
+  const text = `*Newton's Academy*\n*${currentActiveSavedReport.title}*\n\nStudent: *${me.name}*\nRoll No: ${me.rollNo}\n\nProgress report taiyar hai. App pe login karke dekhen:\n${window.location.href}`;
+  window.open('mailto:?subject='+encodeURIComponent("Newton's Academy - "+me.name+" - Progress Report")+'&body='+encodeURIComponent(text));
+};
+
+window.srcPrintSaved = () => {
+  if(!currentActiveSavedReport) return;
+  const pr = document.getElementById('print-report-area');
+  pr.innerHTML = `<style>
+    body{margin:0;font-family:'Noto Sans',sans-serif}
+    .src-wrap{background:#fff;color:#111}
+    .src-header{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:#fff;padding:1.8rem 2.2rem;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .src-school{font-family:'Baloo 2',sans-serif;font-size:1.75rem;font-weight:800;color:#f59e0b}
+    .src-school-sub{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:.18rem}
+    .src-rpt-label{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:1rem}
+    .src-rpt-title{font-size:1.05rem;font-weight:700;color:#fff;margin-top:.18rem}
+    .src-student-info{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.7rem;padding:1rem 2.2rem;background:#f8fafc;border-bottom:2px solid #e2e8f0}
+    .src-info-block .il{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:.1rem}
+    .src-info-block .iv{font-size:.9rem;font-weight:700;color:#1e293b}
+    .src-summary{display:flex;gap:1.5rem;flex-wrap:wrap;padding:.9rem 2.2rem;background:#f0fdf4;border-bottom:1px solid #bbf7d0}
+    .src-sum-item .sl{font-size:.67rem;text-transform:uppercase;color:#166534;margin-bottom:.12rem}
+    .src-sum-item .sv{font-size:1.3rem;font-weight:800;font-family:'Baloo 2',sans-serif}
+    .src-body{padding:1.2rem 2.2rem}
+    .src-subj-card{margin-bottom:1.2rem;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid}
+    .src-subj-header{background:linear-gradient(90deg,#1e3a5f,#2563eb);color:#fff;padding:.62rem 1.1rem;display:flex;align-items:center;justify-content:space-between;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .src-subj-name{font-family:'Baloo 2',sans-serif;font-size:.96rem;font-weight:700}
+    .src-subj-rank{font-size:.74rem;background:rgba(255,255,255,.18);border-radius:20px;padding:.16rem .62rem}
+    .src-tbl{width:100%;border-collapse:collapse}
+    .src-tbl th{background:#f1f5f9;padding:.48rem .9rem;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600;border-bottom:1px solid #e2e8f0}
+    .src-tbl td{padding:.48rem .9rem;border-bottom:1px solid #f1f5f9;font-size:.82rem;color:#334155}
+    .src-tbl tr:last-child td{border-bottom:none}
+    .src-total-row td{background:#fefce8;font-weight:700;color:#92400e}
+    .src-footer{padding:.7rem 2.2rem 1.2rem;text-align:center;border-top:1px solid #e2e8f0}
+    .src-footer p{font-size:.69rem;color:#94a3b8;margin:.1rem 0}
+    .gbadge{display:inline-block;padding:.12rem .55rem;border-radius:12px;font-size:.72rem;font-weight:700}
+  </style>` + currentActiveSavedReport.contentHtml;
+  pr.style.display = 'block';
+  window.print();
+  setTimeout(() => { pr.style.display = 'none'; pr.innerHTML = '' }, 1000);
+};
+
+// ── Admin Manage Data (Tests & Reports) Functions ──
+window.adminRenderTests = async () => {
+  const cls = document.getElementById('adm-test-class').value;
+  const w = document.getElementById('adm-tests-list');
+  w.innerHTML = '<span style="color:var(--muted)">Load ho raha hai...</span>';
+  
+  let tests = await fbAll('tests');
+  if (cls) tests = tests.filter(t => t.cls === cls);
+  
+  if (!tests.length) {
+    w.innerHTML = '<span style="color:var(--muted)">Koi test nahi mila.</span>';
+    return;
+  }
+  
+  tests.sort((a,b) => b.id - a.id);
+  
+  w.innerHTML = tests.map(t => `
+    <div class="student-row" style="margin-bottom:.5rem;">
+      <div>
+        <div class="s-name">${t.name} (${t.subject})</div>
+        <div class="s-meta">Class ${t.cls} | Marks: ${t.total} | Date: ${t.createdAt || ''}</div>
+      </div>
+      <button class="btn btn-red" style="padding:.28rem .55rem;font-size:.73rem" onclick="adminDeleteTest('${t.id}')">Delete</button>
+    </div>
+  `).join('');
+};
+
+window.adminDeleteTest = async (testId) => {
+  if (!confirm('Kya aap sach me is test ko delete karna chahte hain? Sabhi students ke marks bhi delete ho jayenge.')) return;
+  loading(true, 'Test delete ho raha hai...');
+  try {
+    await fbDel('tests', testId);
+    const marks = await fbAll('marks');
+    for (const m of marks.filter(x => x.testId === testId)) {
+      await fbDel('marks', m.id);
+    }
+    C.tests = null;
+    C.marks = null;
+    notify('Test aur uske marks delete ho gaye ✓');
+    adminRenderTests();
+  } catch (e) {
+    notify('Error: ' + e.message, false);
+  }
+  loading(false);
+};
+
+window.adminRenderReports = async () => {
+  const type = document.getElementById('adm-report-type').value;
+  const w = document.getElementById('adm-reports-list');
+  w.innerHTML = '<span style="color:var(--muted)">Load ho raha hai...</span>';
+  
+  let reports = await fbAll('reports');
+  if (type) reports = reports.filter(r => r.type === type);
+  
+  if (!reports.length) {
+    w.innerHTML = '<span style="color:var(--muted)">Koi report nahi mili.</span>';
+    return;
+  }
+  
+  reports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  w.innerHTML = reports.map(r => {
+    const info = r.type === 'class' ? `Class ${r.class}` : `${r.studentName} (${r.rollNo})`;
+    return `
+      <div class="student-row" style="margin-bottom:.5rem;">
+        <div>
+          <div class="s-name">${r.title}</div>
+          <div class="s-meta">${r.type === 'class' ? 'Class Report' : 'Student Report'} | ${info} | ${r.dateString || ''}</div>
+        </div>
+        <div style="display:flex; gap:.3rem;">
+          <button class="btn btn-blue" style="padding:.28rem .55rem;font-size:.73rem" onclick="adminViewReport('${r.id}')">View</button>
+          <button class="btn btn-red" style="padding:.28rem .55rem;font-size:.73rem" onclick="adminDeleteReport('${r.id}')">Del</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.adminViewReport = async (reportId) => {
+  const reports = await fbAll('reports');
+  const r = reports.find(x => x.id === reportId);
+  if (r) {
+    const pr = document.getElementById('print-report-area');
+    pr.innerHTML = r.contentHtml;
+    pr.style.display = 'block';
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = 'Close Preview';
+    closeBtn.className = 'btn btn-red';
+    closeBtn.style.cssText = 'position:fixed; top:1rem; right:1rem; z-index:10000;';
+    closeBtn.onclick = () => {
+      pr.style.display = 'none';
+      pr.innerHTML = '';
+    };
+    pr.appendChild(closeBtn);
+  }
+};
+
+window.adminDeleteReport = async (reportId) => {
+  if (!confirm('Kya aap sach me is saved report ko delete karna chahte hain?')) return;
+  loading(true, 'Report delete ho raha hai...');
+  try {
+    await fbDel('reports', reportId);
+    notify('Report delete ho gayi ✓');
+    adminRenderReports();
+  } catch (e) {
+    notify('Error: ' + e.message, false);
+  }
+  loading(false);
+};
+
+// ── Event Listeners ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('login-screen').classList.contains('active')) doLogin();
+});
+['marks-modal','delete-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id)});
+});
+</script>
+</body>
+</html>
