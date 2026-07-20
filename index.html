@@ -242,7 +242,7 @@ canvas{display:block}
 <div id="login-screen" class="screen" style="min-height:100vh">
   <div>
     <div class="logo-wrap">
-      <div style="font-size:2.8rem;margin-bottom:.4rem">&#127891;</div>
+      <img src="website_logo.png" alt="Newton's Academy Logo" style="height:70px; width:auto; margin-bottom:.4rem; display:inline-block;">
       <div class="academy-name">Newton's Academy</div>
       <div class="academy-sub">Management Portal</div>
     </div>
@@ -269,7 +269,7 @@ canvas{display:block}
 <!-- ════ ADMIN SCREEN ════ -->
 <div id="admin-screen" class="screen">
   <div class="topbar">
-    <span class="brand">&#127891; Newton's Academy</span>
+    <span class="brand" style="display:inline-flex;align-items:center;gap:.5rem"><img src="website_logo.png" alt="Logo" style="height:28px;width:auto;"> Newton's Academy</span>
     <div class="topbar-right">
       <span class="userinfo">&#9989; Admin Panel</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -398,7 +398,7 @@ canvas{display:block}
 <!-- ════ TEACHER SCREEN ════ -->
 <div id="teacher-screen" class="screen">
   <div class="topbar">
-    <span class="brand">&#127891; Newton's Academy</span>
+    <span class="brand" style="display:inline-flex;align-items:center;gap:.5rem"><img src="website_logo.png" alt="Logo" style="height:28px;width:auto;"> Newton's Academy</span>
     <div class="topbar-right">
       <span class="userinfo" id="t-topbar-info">Teacher</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -545,7 +545,7 @@ canvas{display:block}
 <!-- ════ STUDENT SCREEN ════ -->
 <div id="student-screen" class="screen">
   <div class="topbar">
-    <span class="brand">&#127891; Newton's Academy</span>
+    <span class="brand" style="display:inline-flex;align-items:center;gap:.55rem"><img src="website_logo.png" alt="Logo" style="height:28px;width:auto;"> Newton's Academy</span>
     <div class="topbar-right">
       <span class="userinfo" id="s-topbar-name">Student</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -1037,7 +1037,7 @@ window.generateClassReport = async()=>{
   const now=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
   const rContent = `<div class="src-wrap">
     <div class="src-header">
-      <div class="src-school">&#127891; Newton's Academy</div>
+      <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.6rem"><img src="website_logo.png" alt="Logo" style="height:38px;width:auto;vertical-align:middle;"> Newton's Academy</div>
       <div class="src-school-sub">Excellence in Education</div>
       <div class="src-rpt-label">Class Progress Report</div>
       <div class="src-rpt-title">${title}</div>
@@ -1554,7 +1554,7 @@ window.generateStudentReport = async()=>{
 
     const reportHtml=`<div class="src-wrap">
       <div class="src-header">
-        <div class="src-school">&#127891; Newton's Academy</div>
+        <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.6rem"><img src="website_logo.png" alt="Logo" style="height:38px;width:auto;vertical-align:middle;"> Newton's Academy</div>
         <div class="src-school-sub">Excellence in Education</div>
         <div class="src-rpt-label">Student Progress Report</div>
         <div class="src-rpt-title">${title}</div>
@@ -2019,7 +2019,7 @@ window.teacherGenerateStudentReport = async () => {
     
     const reportHtml = `<div class="src-wrap">
       <div class="src-header">
-        <div class="src-school">&#127891; Newton's Academy</div>
+        <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.6rem"><img src="website_logo.png" alt="Logo" style="height:38px;width:auto;vertical-align:middle;"> Newton's Academy</div>
         <div class="src-school-sub">Excellence in Education</div>
         <div class="src-rpt-label">Student Progress Report</div>
         <div class="src-rpt-title">${title}</div>
