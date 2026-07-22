@@ -242,7 +242,7 @@ canvas{display:block}
 <div id="login-screen" class="screen" style="min-height:100vh">
   <div>
     <div class="logo-wrap">
-      <img src="website_logo.png" alt="Newton's Academy Logo" style="height:70px; width:auto; margin-bottom:.4rem; display:inline-block;">
+      <img src="wb_logo.png" alt="Newton's Academy Logo" style="height:90px; width:auto; margin-bottom:.6rem; display:inline-block; filter: drop-shadow(0 4px 14px rgba(245, 158, 11, 0.35));">
       <div class="academy-name">Newton's Academy</div>
       <div class="academy-sub">Management Portal</div>
     </div>
@@ -269,7 +269,7 @@ canvas{display:block}
 <!-- ════ ADMIN SCREEN ════ -->
 <div id="admin-screen" class="screen">
   <div class="topbar">
-    <span class="brand" style="display:inline-flex;align-items:center;gap:.5rem"><img src="website_logo.png" alt="Logo" style="height:28px;width:auto;"> Newton's Academy</span>
+    <span class="brand" style="display:inline-flex;align-items:center;gap:.6rem"><img src="wb_logo.png" alt="Logo" style="height:32px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"> Newton's Academy</span>
     <div class="topbar-right">
       <span class="userinfo">&#9989; Admin Panel</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -398,7 +398,7 @@ canvas{display:block}
 <!-- ════ TEACHER SCREEN ════ -->
 <div id="teacher-screen" class="screen">
   <div class="topbar">
-    <span class="brand" style="display:inline-flex;align-items:center;gap:.5rem"><img src="website_logo.png" alt="Logo" style="height:28px;width:auto;"> Newton's Academy</span>
+    <span class="brand" style="display:inline-flex;align-items:center;gap:.6rem"><img src="wb_logo.png" alt="Logo" style="height:32px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"> Newton's Academy</span>
     <div class="topbar-right">
       <span class="userinfo" id="t-topbar-info">Teacher</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -545,7 +545,7 @@ canvas{display:block}
 <!-- ════ STUDENT SCREEN ════ -->
 <div id="student-screen" class="screen">
   <div class="topbar">
-    <span class="brand" style="display:inline-flex;align-items:center;gap:.55rem"><img src="website_logo.png" alt="Logo" style="height:28px;width:auto;"> Newton's Academy</span>
+    <span class="brand" style="display:inline-flex;align-items:center;gap:.6rem"><img src="wb_logo.png" alt="Logo" style="height:32px;width:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"> Newton's Academy</span>
     <div class="topbar-right">
       <span class="userinfo" id="s-topbar-name">Student</span>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -1037,7 +1037,7 @@ window.generateClassReport = async()=>{
   const now=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
   const rContent = `<div class="src-wrap">
     <div class="src-header">
-      <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.6rem"><img src="website_logo.png" alt="Logo" style="height:38px;width:auto;vertical-align:middle;"> Newton's Academy</div>
+      <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.65rem"><img src="wb_logo.png" alt="Logo" style="height:42px;width:auto;vertical-align:middle;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));"> Newton's Academy</div>
       <div class="src-school-sub">Excellence in Education</div>
       <div class="src-rpt-label">Class Progress Report</div>
       <div class="src-rpt-title">${title}</div>
@@ -1106,10 +1106,11 @@ function setupTeacherPanel(){
   const lc=document.getElementById('list-class');
   if(lc) lc.innerHTML='<option value="">Sabhi</option>'+myTeacher.classes.map(c=>`<option>${c}</option>`).join('');
   
-  // Render subjects checklist for student registration
+  // Render subjects checklist for student registration (only teacher's subjects)
   const w = document.getElementById('student-subjects-list');
   if (w) {
-    w.innerHTML = ALL_SUBS.map(s => {
+    const tSubs = myTeacher.subjects && myTeacher.subjects.length ? myTeacher.subjects : ALL_SUBS;
+    w.innerHTML = tSubs.map(s => {
       const id = 's_sub_' + s.replace(/\s/g, '_');
       return `<label class="cb-item" id="${id}"><input type="checkbox" value="${s}" onchange="cbToggle(this,'${id}')"> ${s}</label>`;
     }).join('');
@@ -1263,7 +1264,9 @@ window.openMarksModal = async testId=>{
   const test=(await gT()).find(t=>t.id===testId); if(!test){loading(false);return}
   if(myTeacher&&test.createdBy!==myTeacher.id){notify('Is test ka access nahi!',false);loading(false);return}
   document.getElementById('modal-test-name').textContent=test.name+' — '+test.subject+' (Class '+test.cls+')';
-  const students=(await gS()).filter(s=>s.cls===test.cls);
+  let students=(await gS()).filter(s=>s.cls===test.cls);
+  if(myTeacher) students=students.filter(s=>s.addedBy===myTeacher.id);
+  students=students.filter(s=>!s.subjects||s.subjects.includes(test.subject));
   const marks=await gM();
   loading(false);
   document.getElementById('modal-marks-content').innerHTML=
@@ -1304,7 +1307,7 @@ window.renderRanking = async()=>{
   if(!cls||!sub){w.innerHTML='';return}
   if(!myTeacher.subjects.includes(sub)){w.innerHTML='<div class="card" style="color:var(--danger)">Is subject ka access nahi.</div>';return}
   w.innerHTML='<span style="color:var(--muted)">Load ho raha hai...</span>';
-  const students=(await gS()).filter(s=>s.cls===cls);
+  const students=(await gS()).filter(s=>s.cls===cls && s.addedBy===myTeacher.id && (!s.subjects || s.subjects.includes(sub)));
   const tests=(await gT()).filter(t=>t.cls===cls&&t.subject===sub&&t.createdBy===myTeacher.id);
   if(!tests.length){w.innerHTML='<div class="card" style="color:var(--muted)">Is subject mein koi test nahi hai.</div>';return}
   const marks=await gM();
@@ -1554,7 +1557,7 @@ window.generateStudentReport = async()=>{
 
     const reportHtml=`<div class="src-wrap">
       <div class="src-header">
-        <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.6rem"><img src="website_logo.png" alt="Logo" style="height:38px;width:auto;vertical-align:middle;"> Newton's Academy</div>
+        <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.65rem"><img src="wb_logo.png" alt="Logo" style="height:42px;width:auto;vertical-align:middle;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));"> Newton's Academy</div>
         <div class="src-school-sub">Excellence in Education</div>
         <div class="src-rpt-label">Student Progress Report</div>
         <div class="src-rpt-title">${title}</div>
@@ -1906,11 +1909,16 @@ window.teacherUpdateReportTests = async () => {
   }
   
   w.innerHTML = '<span style="color:var(--muted);font-size:.83rem">Tests load ho rahe hain...</span>';
-  const allTests = await gT();
-  const tests = allTests.filter(t => t.cls === cls);
+  const [allTests, allStudents] = [await gT(), await gS()];
+  const selStudent = allStudents.find(s => s.id === studentId);
+  
+  let tests = allTests.filter(t => t.cls === cls);
+  if (selStudent && selStudent.subjects && selStudent.subjects.length > 0) {
+    tests = tests.filter(t => selStudent.subjects.includes(t.subject));
+  }
   
   if(!tests.length) {
-    w.innerHTML = '<span style="color:var(--muted);font-size:.83rem">Koi test nahi mila.</span>';
+    w.innerHTML = '<span style="color:var(--muted);font-size:.83rem">Is student ke padhne wale subjects mein koi test nahi mila.</span>';
     return;
   }
   
@@ -2019,7 +2027,7 @@ window.teacherGenerateStudentReport = async () => {
     
     const reportHtml = `<div class="src-wrap">
       <div class="src-header">
-        <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.6rem"><img src="website_logo.png" alt="Logo" style="height:38px;width:auto;vertical-align:middle;"> Newton's Academy</div>
+        <div class="src-school" style="display:flex;align-items:center;justify-content:center;gap:.65rem"><img src="wb_logo.png" alt="Logo" style="height:42px;width:auto;vertical-align:middle;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));"> Newton's Academy</div>
         <div class="src-school-sub">Excellence in Education</div>
         <div class="src-rpt-label">Student Progress Report</div>
         <div class="src-rpt-title">${title}</div>
